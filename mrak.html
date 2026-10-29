@@ -1,0 +1,871 @@
+<!doctype html>
+<html lang="sr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Oskar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Nunito:wght@600;700;800;900&display=swap">
+<style>
+/* Layout: traka gore, scena (SVG) u sredini, dijalog sa izborima dole. Sve je izmišljeno. */
+:root{
+  --night:#241A3D; --panel:#34285A; --panel-2:#423470; --line:#54458A;
+  --cream:#FFF2E2; --muted:#BDB0E0; --mustard:#FFC93C; --coral:#FF6F61; --mint:#5FD4A8; --red:#E0312B;
+  --display:"Bagel Fat One","Arial Rounded MT Bold","Trebuchet MS",system-ui,sans-serif;
+  --body:"Nunito","Segoe UI",system-ui,-apple-system,sans-serif;
+  color-scheme:dark;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box;
+}
+html,body{height:100%}
+body{margin:0;background:radial-gradient(1200px 620px at 50% -12%,#3A2A66 0%,transparent 62%),var(--night);color:var(--cream);font-family:var(--body);font-size:15px;overflow:hidden;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,a:focus-visible{outline:3px solid var(--mustard);outline-offset:2px}
+.app{height:100%;max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:10px;box-sizing:border-box;
+  padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand h1{margin:0;font-family:var(--display);font-weight:400;font-size:clamp(22px,5vw,32px);line-height:1;color:var(--mustard)}
+.back{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 12px 5px 9px;font-weight:900;color:var(--cream);text-decoration:none;font-size:14px}
+.pills{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.pill{border-radius:999px;padding:5px 12px;font-weight:900;font-variant-numeric:tabular-nums;display:flex;gap:6px;align-items:baseline}
+.pill small{font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.pill.bad{background:var(--red)!important;color:#fff}
+.pill.bad small{color:#FFD9D6}
+.icon-btn{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;padding:0}
+.icon-btn svg{width:18px;height:18px}
+.pill,.back,.icon-btn{background:rgba(52,40,90,.72);border:1px solid rgba(255,255,255,.08);box-shadow:0 6px 18px rgba(10,5,25,.25)}
+
+.stage{position:relative;flex:1;min-height:0;border-radius:24px;overflow:hidden;background:#140F24;box-shadow:0 0 0 1px rgba(255,255,255,.08),0 18px 40px rgba(10,5,25,.45)}
+.stage svg{display:block;width:100%;height:100%}
+
+.dlg{background:var(--cream);color:var(--night);border-radius:22px;padding:14px 16px 16px;box-shadow:0 10px 30px rgba(10,5,25,.4);flex:none}
+.who{font-size:12px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:#2E8B57;min-height:15px}
+.say{margin:4px 0 10px;font-weight:800;font-size:17px;line-height:1.4;min-height:48px;text-wrap:pretty}
+.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}
+.ch{border:0;border-radius:16px;padding:13px 14px;font-weight:900;font-size:16px;background:var(--night);color:var(--cream);box-shadow:0 4px 0 rgba(0,0,0,.22);transition:transform .12s,box-shadow .12s}
+.ch.b{background:#E9DCF5;color:var(--night)}
+.ch.go{background:#2E8B57;color:#fff}
+.ch:not([disabled]):active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.22)}
+.ch[disabled]{opacity:.45;cursor:default}
+.ch kbd{font-family:inherit;font-size:11px;opacity:.6;margin-left:4px}
+
+.modal-wrap{position:fixed;inset:0;background:rgba(20,12,36,.55);display:grid;place-items:center;z-index:30;padding:16px;box-sizing:border-box;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+.card{width:100%;max-width:440px;max-height:100%;overflow:auto;background:var(--cream);color:var(--night);border-radius:26px;padding:22px;box-sizing:border-box;box-shadow:0 20px 60px rgba(10,5,25,.5)}
+.card .eyebrow{font-size:12px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:#2E8B57}
+.card .eyebrow.red{color:var(--red)}
+.card h2{font-family:var(--display);font-weight:400;font-size:36px;line-height:1.05;margin:6px 0 8px;color:#9A5B2E;text-wrap:balance}
+.card p{margin:0 0 10px;font-weight:700;line-height:1.45}
+.card ul{margin:0 0 12px;padding-left:20px;font-weight:700;line-height:1.5}
+.card .warn{background:#FFE1DE;color:#9B1C17;border-radius:14px;padding:10px 12px;font-weight:800}
+.card .note{font-size:13px;color:#8A6A4A}
+.big{display:block;width:100%;padding:14px;border:0;border-radius:16px;background:#241A3D;color:var(--cream);font-weight:900;font-size:17px;margin-top:10px;text-align:center;text-decoration:none;box-sizing:border-box;box-shadow:0 4px 0 rgba(0,0,0,.22)}
+.big.alt{background:#E9DCF5;color:#241A3D}
+.side-q{font-size:12px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:#8A6A4A;margin-top:4px}
+.sides{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:8px}
+.side{border:0;border-radius:16px;padding:12px 6px;font-weight:900;font-size:16px;background:#241A3D;color:var(--cream);display:flex;flex-direction:column;align-items:center;gap:4px;box-shadow:0 4px 0 rgba(0,0,0,.22);transition:transform .12s,box-shadow .12s}
+.side span{font-size:26px;line-height:1}
+.side[data-side="caci"]{background:#E0312B;color:#fff}
+.side[data-side="student"]{background:#2E8B57;color:#fff}
+.side:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.22)}
+.slogan{margin:14px 0 0!important;text-align:center;font-family:var(--display);font-weight:400!important;font-size:19px;line-height:1.15!important;color:#9A5B2E;text-wrap:balance}
+
+/* SVG detalji */
+.disp{font-family:var(--display)}
+.nun{font-family:var(--body);font-weight:900}
+.tag,.pop{transform-box:fill-box;transform-origin:center}
+.tag.off{display:none}
+.tag.popin,.pop{animation:popin .55s cubic-bezier(.3,1.6,.5,1) both}
+@keyframes popin{0%{transform:scale(0)}100%{transform:scale(1)}}
+.tag:not(.off){animation:tagBob 2.4s ease-in-out infinite}
+.tag.popin{animation:popin .55s cubic-bezier(.3,1.6,.5,1) both}
+@keyframes tagBob{50%{transform:translateY(-4px)}}
+.glow{transform-box:fill-box;transform-origin:center;animation:blink 3.2s infinite}
+@keyframes blink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
+.peek{animation:peek 3s ease-in-out infinite}
+@keyframes peek{0%,100%{transform:translateY(26px)}35%,70%{transform:translateY(0)}}
+.flick{animation:flick 4s infinite}
+@keyframes flick{0%,40%,44%,48%,100%{opacity:1}42%,46%{opacity:.35}}
+.flame{transform-box:fill-box;transform-origin:50% 100%;animation:flame .35s ease-in-out infinite alternate}
+@keyframes flame{to{transform:scaleY(1.15) scaleX(.92)}}
+.lr{animation:lr .4s steps(1) infinite}.lb{animation:lr .4s steps(1) infinite reverse}
+@keyframes lr{0%{opacity:1}50%{opacity:.25}}
+.siren{animation:siren .5s steps(1) infinite;mix-blend-mode:screen}
+@keyframes siren{0%{fill:rgba(255,40,40,.28)}50%{fill:rgba(40,90,255,.28)}}
+/* policija */
+.cop .cryface,.cop .armsup{display:none}
+.cop.crying .cryface,.cop.crying .armsup{display:inline}
+.cop.crying .calm{display:none}
+.tears{animation:tears .45s linear infinite}
+@keyframes tears{0%{transform:translateY(0);opacity:1}100%{transform:translateY(10px);opacity:.2}}
+.bob{animation:bob 1.6s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-3px)}}
+
+@media (max-width:560px){ .pill{padding:4px 9px;font-size:13px} .pill small{font-size:9px} .pills{gap:4px} .app{gap:8px;padding-block:8px} .say{font-size:15px;min-height:42px} .ch{font-size:15px;padding:12px} .dlg{padding:12px 14px 14px} }
+@media (max-height:600px){ .say{min-height:0;margin-bottom:8px} .card h2{font-size:28px} }
+@media (max-aspect-ratio:1/1){ .app{justify-content:center} .stage{flex:none;aspect-ratio:800/450} }
+@media (prefers-reduced-motion:reduce){ .tag:not(.off),.glow,.peek,.flick,.flame,.bob{animation:none} }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand"><a class="back" href="index.html" aria-label="Nazad u Avduljevu sobu"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>Soba</a><h1>Oskar</h1></div>
+    <div class="pills">
+      <span class="pill"><small>nivo</small><b id="lvl">–</b></span>
+      <span class="pill" id="sidePill" hidden><small>strana</small><b id="sideTxt"></b></span>
+      <span class="pill" id="statusPill"><small>status</small><b id="status">čist</b></span>
+      <button class="icon-btn" id="soundBtn" aria-label="Zvuk"></button>
+    </div>
+  </header>
+  <main class="stage" id="stage" aria-label="Scena igre"></main>
+  <section class="dlg" aria-live="polite">
+    <div class="who" id="who"></div>
+    <p class="say" id="say"></p>
+    <div class="choices" id="choices"></div>
+  </section>
+</div>
+
+<div class="modal-wrap" id="introM">
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="iTitle">
+    <div class="eyebrow">Nova igra · samo za zabavu</div>
+    <h2 id="iTitle">Oskar</h2>
+    <p>Neko iz senke pokušava da te natera na prljave poslove. Na svakom nivou biraš između dve opcije.</p>
+    <ul>
+      <li>Četiri nivoa: mračna ulica, banda Kobre, ćaci policija na trgu i zgrada tabloida LAŽOGRAF.</li>
+      <li>Pogrešan izbor na prva dva nivoa vraća te na početak.</li>
+      <li>Pogrešan izbor na kraju ostavlja ti natpis iznad glave. Zauvek.</li>
+      <li>Bez coinsa, igra se samo iz fore.</li>
+    </ul>
+    <p class="warn" id="introWarn" hidden>Iznad glave ti piše ĆACI. Jedini način da ga skineš je da pređeš igru kako treba.</p>
+    <p class="note">Svi likovi, mesta i natpisi su izmišljeni.</p>
+    <div class="side-q">Izaberi stranu</div>
+    <div class="sides" id="sides">
+      <button class="side" data-side="caci"><span>🧢</span>Ćaci</button>
+      <button class="side" data-side="student"><span>🎓</span>Student</button>
+      <button class="side" data-side="neutral"><span>🤷</span>Neutralan</button>
+    </div>
+    <p class="slogan">NAUČI SVOJE DETE KAKO DA RAZMIŠLJA PRAVILNO!</p>
+    <a class="big alt" href="index.html">Nazad u Avduljevu sobu</a>
+  </div>
+</div>
+
+<div class="modal-wrap" id="endM" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="eTitle">
+    <div class="eyebrow" id="eEyebrow">Kraj</div>
+    <h2 id="eTitle"></h2>
+    <div id="eBody"></div>
+    <button class="big" id="againBtn">Igraj ponovo</button>
+    <a class="big alt" href="index.html">Nazad u Avduljevu sobu</a>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const NS = 'http://www.w3.org/2000/svg';
+const wait = ms => new Promise(r => setTimeout(r, ms));
+const lerp = (a, b, t) => a + (b - a) * t;
+const easeOut = t => 1 - Math.pow(1 - t, 3), easeIn = t => t * t * t, easeIO = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const tween = (ms, fn, ease = x => x) => new Promise(res => {
+  const s = performance.now();
+  const step = now => { const t = Math.min(1, (now - s) / ms); fn(ease(t)); if (t < 1) requestAnimationFrame(step); else res(); };
+  requestAnimationFrame(step);
+});
+
+/* ---------- Trajni natpis ĆACI ---------- */
+const CKEY = 'dz-mrak-caci';
+let cursed = false; try { cursed = localStorage.getItem(CKEY) === '1'; } catch (e) {}
+const setCursed = v => { cursed = v; try { localStorage.setItem(CKEY, v ? '1' : '0'); } catch (e) {} renderHud(); };
+
+/* ---------- Zvuk ---------- */
+let soundOn = true; try { soundOn = localStorage.getItem('dz-mrak-sound') !== '0'; } catch (e) {}
+let AC = null;
+const ac = () => { if (!soundOn) return null; if (AC === null) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { AC = false; } } if (AC && AC.state === 'suspended') AC.resume(); return AC || null; };
+function tone(f, d, { type = 'square', vol = .07, to = 0, at = 0 } = {}) {
+  const a = ac(); if (!a) return;
+  try { const t0 = a.currentTime + at, o = a.createOscillator(), g = a.createGain(); o.type = type; o.frequency.setValueAtTime(f, t0); if (to) o.frequency.exponentialRampToValueAtTime(to, t0 + d); g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(.0008, t0 + d); o.connect(g).connect(a.destination); o.start(t0); o.stop(t0 + d + .03); } catch (e) {}
+}
+function noise(d, { vol = .2, freq = 1000, at = 0 } = {}) {
+  const a = ac(); if (!a) return;
+  try { const t0 = a.currentTime + at, b = a.createBuffer(1, Math.ceil(a.sampleRate * d), a.sampleRate), ch = b.getChannelData(0); for (let i = 0; i < ch.length; i++) ch[i] = (Math.random() * 2 - 1) * (1 - i / ch.length); const s = a.createBufferSource(); s.buffer = b; const f = a.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = freq; const g = a.createGain(); g.gain.value = vol; s.connect(f).connect(g).connect(a.destination); s.start(t0); } catch (e) {}
+}
+const SFX = {
+  click: () => tone(560, .06, { vol: .04 }),
+  whoosh: () => noise(.3, { vol: .12, freq: 2600 }),
+  splat: () => { noise(.3, { vol: .35, freq: 700 }); tone(170, .25, { type: 'sine', vol: .2, to: 60 }); },
+  spit: () => noise(.14, { vol: .16, freq: 4500 }),
+  pop: () => tone(420, .12, { vol: .06, to: 950 }),
+  crash: () => { noise(.45, { vol: .3, freq: 6000 }); tone(1900, .2, { type: 'triangle', vol: .05, to: 900, at: .05 }); },
+  siren: () => { for (let i = 0; i < 5; i++) { tone(650, .35, { type: 'sawtooth', vol: .035, to: 950, at: i * .7 }); tone(950, .35, { type: 'sawtooth', vol: .035, to: 650, at: i * .7 + .35 }); } },
+  engine: () => tone(70, 1.2, { type: 'sawtooth', vol: .05, to: 110 }),
+  win: () => [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, .25, { type: 'triangle', vol: .08, at: i * .12 })),
+  sad: () => [392, 370, 349, 294].forEach((f, i) => tone(f, i === 3 ? .8 : .3, { type: 'sawtooth', vol: .05, at: i * .32 })),
+  stamp: () => { tone(90, .3, { type: 'sine', vol: .25, to: 50 }); noise(.15, { vol: .2, freq: 900 }); },
+  run: () => { for (let i = 0; i < 6; i++) tone(300 + (i % 2) * 80, .05, { vol: .03, at: i * .09 }); },
+};
+function renderSoundBtn() {
+  $('soundBtn').innerHTML = soundOn
+    ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>'
+    : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M17 9l5 6M22 9l-5 6"/></svg>';
+  $('soundBtn').setAttribute('aria-label', soundOn ? 'Isključi zvuk' : 'Uključi zvuk');
+}
+$('soundBtn').addEventListener('click', () => { soundOn = !soundOn; try { localStorage.setItem('dz-mrak-sound', soundOn ? '1' : '0'); } catch (e) {} renderSoundBtn(); });
+renderSoundBtn();
+
+/* ---------- HUD i dijalog ---------- */
+let level = 0;
+function renderHud() {
+  $('lvl').textContent = level ? `${level}/4` : '–';
+  $('status').textContent = cursed ? 'ĆACI' : 'čist';
+  $('statusPill').classList.toggle('bad', cursed);
+  const tag = document.getElementById('tag'); if (tag) tag.classList.toggle('off', !cursed);
+}
+function say(who, text) { $('who').textContent = who || ''; $('say').textContent = text; }
+let keyMap = [];
+function choices(list) {
+  const box = $('choices'); box.innerHTML = ''; keyMap = [];
+  list.forEach((c, i) => {
+    const b = document.createElement('button'); b.className = 'ch ' + (c.cls || (i ? 'b' : ''));
+    b.innerHTML = c.label + (list.length > 1 ? `<kbd>${i + 1}</kbd>` : '');
+    b.addEventListener('click', () => { if (b.disabled) return; SFX.click(); lock(); c.fn(); });
+    box.appendChild(b); keyMap.push(b);
+  });
+  if (keyMap[0] && matchMedia('(hover:hover)').matches) keyMap[0].focus({ preventScroll: true });
+}
+function lock() { for (const b of $('choices').querySelectorAll('button')) b.disabled = true; }
+addEventListener('keydown', e => {
+  if (!$('introM').hidden || !$('endM').hidden) return;
+  const n = +e.key; if (n >= 1 && n <= keyMap.length) { e.preventDefault(); keyMap[n - 1].click(); }
+});
+
+/* ---------- SVG pomoćnici ---------- */
+const svg = () => $('stage').querySelector('svg');
+function render(inner) { if (typeof game !== 'undefined' && game) { game.done = true; game = null; } $('stage').style.cursor = ''; $('stage').innerHTML = `<svg viewBox="0 0 800 450" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Scena">${inner}<g id="fx"></g></svg>`; renderHud(); }
+function mk(tag, attrs = {}, parent) { const el = document.createElementNS(NS, tag); for (const k in attrs) el.setAttribute(k, attrs[k]); (parent || $('fx')).appendChild(el); return el; }
+const at = (id, x, y = 400, s = 1) => document.getElementById(id).setAttribute('transform', `translate(${x},${y}) scale(${s})`);
+async function fly(el, [x0, y0], [x1, y1], ms, arc, spin = 0) {
+  await tween(ms, t => { const x = lerp(x0, x1, t), y = lerp(y0, y1, t) - arc * 4 * t * (1 - t); el.setAttribute('transform', `translate(${x},${y}) rotate(${spin * t})`); });
+}
+async function shake(id, ms = 500, amp = 7) { const el = document.getElementById(id); await tween(ms, t => el.setAttribute('transform', `translate(${Math.sin(t * 40) * amp * (1 - t)},0)`)); el.removeAttribute('transform'); }
+async function walk(fromX, toX, ms) {
+  SFX.run();
+  await tween(ms, t => { const x = lerp(fromX, toX, t); document.getElementById('pl').setAttribute('transform', `translate(${x},${400 - Math.abs(Math.sin(t * Math.PI * 6)) * 6})`); }, easeIO);
+  document.getElementById('pl').setAttribute('transform', `translate(${toX},400)`);
+}
+function bubbleAt(x, y, text, w = 120, fill = '#FFF2E2', col = '#241A3D') {
+  const g = mk('g', { transform: `translate(${x},${y})` });
+  g.innerHTML = `<g class="pop"><path d="M${-w / 2} -22 h${w} a12 12 0 0 1 12 12 v20 a12 12 0 0 1 -12 12 h${-w / 2 + 20} l-14 14 l-2 -14 h${-w / 2 + 6} a12 12 0 0 1 -12 -12 v-20 a12 12 0 0 1 12 -12z" fill="${fill}" stroke="#241A3D" stroke-width="3"/><text x="6" y="7" text-anchor="middle" class="disp" font-size="24" fill="${col}">${text}</text></g>`;
+  return g;
+}
+function emoji(ch, size, parent) { const t = mk('text', { 'font-size': size, 'text-anchor': 'middle', 'dominant-baseline': 'central' }, parent); t.textContent = ch; return t; }
+
+/* ---------- Likovi (stopala u 0,0) ---------- */
+function playerSVG(x) {
+  return `<g id="pl" transform="translate(${x},400)">
+    <ellipse cx="0" cy="2" rx="32" ry="7" fill="rgba(0,0,0,.35)"/>
+    <rect x="-17" y="-52" width="13" height="50" rx="5" fill="#33407A"/><rect x="4" y="-52" width="13" height="50" rx="5" fill="#33407A"/>
+    <rect x="-22" y="-9" width="21" height="11" rx="5" fill="#FBF8F2"/><rect x="2" y="-9" width="21" height="11" rx="5" fill="#FBF8F2"/>
+    <rect x="-38" y="-108" width="20" height="46" rx="8" fill="#5FD4A8"/><rect x="-35" y="-96" width="14" height="10" rx="3" fill="#3FAE86"/>
+    <rect x="-34" y="-104" width="14" height="48" rx="7" fill="#FF6F61" transform="rotate(10 -27 -104)"/>
+    <rect x="-26" y="-114" width="52" height="68" rx="18" fill="#FF6F61"/>
+    <path d="M-12 -84 h24 v16 a4 4 0 0 1 -4 4 h-16 a4 4 0 0 1 -4 -4z" fill="#E85A4D"/>
+    <path d="M-6 -114 l6 10 l6 -10" stroke="#FBF8F2" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <g id="plArm"><rect x="20" y="-104" width="14" height="48" rx="7" fill="#FF6F61" transform="rotate(-10 27 -104)"/><circle cx="36" cy="-56" r="7" fill="#F2C29B"/></g>
+    <circle cx="0" cy="-138" r="24" fill="#F2C29B"/>
+    <path d="M-25 -140 C-27 -172 27 -172 25 -140 C17 -154 -6 -158 -25 -140Z" fill="#3B2A20"/>
+    <circle cx="-8" cy="-137" r="3.2" fill="#2A1F25"/><circle cx="9" cy="-137" r="3.2" fill="#2A1F25"/>
+    <circle cx="-15" cy="-128" r="4.5" fill="#FF9A8B" opacity=".55"/><circle cx="16" cy="-128" r="4.5" fill="#FF9A8B" opacity=".55"/>
+    <path d="M-7 -126 Q1 -119 9 -126" stroke="#2A1F25" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <g transform="translate(0,-196)"><g id="tag" class="tag${cursed ? '' : ' off'}">
+      <rect x="-48" y="-18" width="96" height="36" rx="11" fill="#E0312B" stroke="#FFF2E2" stroke-width="3"/>
+      <text x="0" y="9" text-anchor="middle" class="disp" font-size="24" fill="#fff">ĆACI</text>
+    </g></g>
+  </g>`;
+}
+function mrakSVG(x, s, shadow, label) {
+  const P = shadow
+    ? { suit: '#08060E', skin: '#08060E', stache: '#08060E', shirt: '#08060E', tie: '#08060E', pants: '#08060E', shoe: '#08060E', btn: '#08060E', hair: '#08060E' }
+    : { suit: '#5B3A8C', skin: '#F0B48C', stache: '#9A3E1C', shirt: '#FBF8F2', tie: '#E0312B', pants: '#3E2766', shoe: '#1C1622', btn: '#FFC93C', hair: '#6B4A2E' };
+  const eyes = shadow
+    ? `<g class="glow"><circle cx="-10" cy="-153" r="4.5" fill="#FFC93C"/><circle cx="10" cy="-153" r="4.5" fill="#FFC93C"/></g>`
+    : `<path d="M-17 -162 l11 4 M17 -162 l-11 4" stroke="#4A2A14" stroke-width="3.5" stroke-linecap="round"/>
+       <circle cx="-10" cy="-152" r="3.4" fill="#2A1F25"/><circle cx="10" cy="-152" r="3.4" fill="#2A1F25"/>
+       <circle cx="10" cy="-152" r="8.5" fill="rgba(255,255,255,.25)" stroke="#E0B23C" stroke-width="2.5"/>
+       <path d="M18 -150 Q26 -122 16 -100" stroke="#E0B23C" stroke-width="1.6" fill="none"/>
+       <ellipse cx="0" cy="-143" rx="6" ry="5" fill="#E09A74"/>
+       <path d="M-7 -126 Q0 -122 7 -126" stroke="#7A2A1A" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+       <path d="M-22 -166 C-12 -184 12 -186 22 -168 M-18 -170 C-8 -186 10 -186 18 -172 M-12 -175 C-4 -186 8 -184 14 -176" stroke="${P.hair}" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+       <ellipse cx="-12" cy="-170" rx="6" ry="3" fill="#fff" opacity=".35"/>`;
+  const lab = label ? `<g transform="translate(0,-218)"><g class="bob">
+      <rect x="-136" y="-36" width="272" height="60" rx="14" fill="#FFF2E2" stroke="#241A3D" stroke-width="3"/>
+      <text x="0" y="-12" text-anchor="middle" class="disp" font-size="20" fill="#9A5B2E">Oskar</text>
+      <text x="0" y="12" text-anchor="middle" class="nun" font-size="14" fill="#241A3D">500 KILOGRAMA KOKAINA</text>
+    </g></g>` : '';
+  return `<g id="mrak" transform="translate(${x},400) scale(${s})"><g id="mrakIn">
+    <ellipse cx="0" cy="2" rx="40" ry="7" fill="rgba(0,0,0,.35)"/>
+    <rect x="-20" y="-44" width="15" height="44" fill="${P.pants}"/><rect x="5" y="-44" width="15" height="44" fill="${P.pants}"/>
+    <ellipse cx="-14" cy="-3" rx="14" ry="6" fill="${P.shoe}"/><ellipse cx="14" cy="-3" rx="14" ry="6" fill="${P.shoe}"/>
+    <rect x="-52" y="-112" width="16" height="56" rx="8" fill="${P.suit}" transform="rotate(12 -44 -112)"/>
+    <rect x="36" y="-112" width="16" height="56" rx="8" fill="${P.suit}" transform="rotate(-12 44 -112)"/>
+    <circle cx="-55" cy="-58" r="8" fill="${P.skin}"/><circle cx="55" cy="-58" r="8" fill="${P.skin}"/>
+    <path d="M-40 -40 C-48 -92 -36 -122 0 -124 C36 -122 48 -92 40 -40Z" fill="${P.suit}"/>
+    <path d="M-12 -122 L0 -94 L12 -122Z" fill="${P.shirt}"/>
+    <path d="M-4 -118 L4 -118 L6 -98 L0 -90 L-6 -98Z" fill="${P.tie}"/>
+    <circle cx="0" cy="-74" r="3" fill="${P.btn}"/><circle cx="0" cy="-58" r="3" fill="${P.btn}"/>
+    <circle cx="-27" cy="-150" r="7" fill="${P.skin}"/><circle cx="27" cy="-150" r="7" fill="${P.skin}"/>
+    <ellipse cx="0" cy="-150" rx="27" ry="29" fill="${P.skin}"/>
+    <path d="M-30 -136 C-18 -150 -4 -142 0 -138 C4 -142 18 -150 30 -136 C20 -127 6 -130 0 -132 C-6 -130 -20 -127 -30 -136Z" fill="${P.stache}"/>
+    ${eyes}
+    ${lab}
+  </g></g>`;
+}
+function kobraSVG(x, s) {
+  return `<g id="kobra" transform="translate(${x},400) scale(${s})"><g id="kobraIn">
+    <ellipse cx="0" cy="2" rx="44" ry="7" fill="rgba(0,0,0,.35)"/>
+    <rect x="-24" y="-64" width="20" height="62" rx="6" fill="#4B5E3A"/><rect x="4" y="-64" width="20" height="62" rx="6" fill="#4B5E3A"/>
+    <circle cx="-16" cy="-40" r="4" fill="#3A4A2C"/><circle cx="14" cy="-24" r="5" fill="#3A4A2C"/><circle cx="-10" cy="-18" r="3" fill="#3A4A2C"/>
+    <rect x="-28" y="-12" width="26" height="14" rx="5" fill="#1C1622"/><rect x="2" y="-12" width="26" height="14" rx="5" fill="#1C1622"/>
+    <rect x="-28" y="-70" width="56" height="10" rx="3" fill="#2A1F25"/><rect x="-6" y="-70" width="12" height="10" rx="2" fill="#FFC93C"/>
+    <ellipse cx="-54" cy="-118" rx="15" ry="27" fill="#C98B5E"/>
+    <ellipse cx="-58" cy="-82" rx="11" ry="19" fill="#C98B5E"/><circle cx="-58" cy="-62" r="10" fill="#C98B5E"/>
+    <path d="M-44 -152 C-30 -160 30 -160 44 -152 L28 -64 L-28 -64Z" fill="#1E1A24"/>
+    <path d="M-16 -140 h32 M-20 -126 h40" stroke="#FF6F61" stroke-width="3" opacity=".8"/>
+    <text x="0" y="-92" text-anchor="middle" class="disp" font-size="15" fill="#FF6F61">KOBRA</text>
+    <circle cx="-42" cy="-148" r="16" fill="#C98B5E"/><circle cx="42" cy="-148" r="16" fill="#C98B5E"/>
+    <ellipse cx="58" cy="-128" rx="15" ry="25" fill="#C98B5E" transform="rotate(-28 58 -128)"/>
+    <ellipse cx="72" cy="-162" rx="11" ry="20" fill="#C98B5E"/>
+    <g id="bottle"><rect x="65" y="-224" width="15" height="44" rx="5" fill="#2F8F5B"/><rect x="69" y="-238" width="7" height="16" rx="2" fill="#2F8F5B"/><rect x="68" y="-210" width="9" height="12" rx="2" fill="#F5EFE4" opacity=".85"/><rect x="67" y="-220" width="3" height="26" rx="1.5" fill="#fff" opacity=".35"/></g>
+    <circle cx="72" cy="-182" r="10" fill="#C98B5E"/>
+    <path d="M-12 -160 Q0 -150 12 -160" stroke="#FFC93C" stroke-width="3" fill="none"/>
+    <rect x="-8" y="-168" width="16" height="12" fill="#C98B5E"/>
+    <circle cx="0" cy="-182" r="22" fill="#C98B5E"/>
+    <path d="M-8 -204 C-6 -232 10 -236 14 -232 C10 -226 12 -212 8 -202Z" fill="#8A3CC8"/>
+    <rect x="-22" y="-198" width="44" height="8" rx="3" fill="#E0312B"/>
+    <path d="M22 -196 l14 -6 l-4 10z" fill="#E0312B"/>
+    <rect x="-17" y="-188" width="15" height="9" rx="4" fill="#15121E"/><rect x="2" y="-188" width="15" height="9" rx="4" fill="#15121E"/><rect x="-3" y="-186" width="6" height="2.5" fill="#15121E"/>
+    <path d="M-8 -170 Q2 -166 10 -172" stroke="#5A2A1A" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M10 -178 l6 6" stroke="#8A4A2A" stroke-width="2"/>
+    <circle cx="-22" cy="-174" r="4" fill="none" stroke="#FFC93C" stroke-width="2.5"/>
+  </g></g>`;
+}
+function gangSVG(id, x, s, col) {
+  return `<g id="${id}" transform="translate(${x},400) scale(${s})"><g id="${id}In">
+    <ellipse cx="0" cy="2" rx="28" ry="6" fill="rgba(0,0,0,.3)"/>
+    <rect x="-16" y="-48" width="13" height="48" rx="5" fill="#22202E"/><rect x="3" y="-48" width="13" height="48" rx="5" fill="#22202E"/>
+    <rect x="-20" y="-8" width="18" height="10" rx="4" fill="#B8B0C8"/><rect x="2" y="-8" width="18" height="10" rx="4" fill="#B8B0C8"/>
+    <rect x="-25" y="-112" width="50" height="68" rx="16" fill="${col}"/>
+    <rect x="-16" y="-72" width="32" height="14" rx="6" fill="rgba(0,0,0,.18)"/>
+    <circle cx="0" cy="-132" r="27" fill="${col}"/>
+    <ellipse cx="0" cy="-129" rx="17" ry="19" fill="#15121E"/>
+    <ellipse cx="-6" cy="-131" rx="3" ry="2.2" fill="#fff"/><ellipse cx="7" cy="-131" rx="3" ry="2.2" fill="#fff"/>
+  </g></g>`;
+}
+function brunoSVG(x) {
+  return `<g id="bruno" transform="translate(${x},400)"><g id="brunoIn">
+    <ellipse cx="0" cy="2" rx="80" ry="8" fill="rgba(0,0,0,.35)"/>
+    <path d="M-70 -92 C-96 -90 -100 -50 -86 -30 C-92 -56 -84 -76 -66 -80Z" fill="#3B2412"/>
+    <rect x="-56" y="-66" width="13" height="64" rx="5" fill="#7A4A22"/><rect x="-36" y="-66" width="13" height="64" rx="5" fill="#8B5A2B"/>
+    <rect x="30" y="-66" width="13" height="64" rx="5" fill="#7A4A22"/><rect x="50" y="-66" width="13" height="64" rx="5" fill="#8B5A2B"/>
+    <rect x="-58" y="-8" width="17" height="9" rx="3" fill="#2A1F25"/><rect x="-38" y="-8" width="17" height="9" rx="3" fill="#2A1F25"/>
+    <rect x="28" y="-8" width="17" height="9" rx="3" fill="#2A1F25"/><rect x="48" y="-8" width="17" height="9" rx="3" fill="#2A1F25"/>
+    <ellipse cx="0" cy="-80" rx="74" ry="32" fill="#8B5A2B"/>
+    <ellipse cx="-30" cy="-90" rx="16" ry="10" fill="#A26C38" opacity=".7"/><ellipse cx="10" cy="-74" rx="12" ry="8" fill="#A26C38" opacity=".6"/>
+    <rect x="34" y="-170" width="48" height="96" rx="20" fill="#6FA8DC"/>
+    <path d="M44 -168 v86 M72 -168 v86" stroke="#E0312B" stroke-width="5"/>
+    <rect x="22" y="-158" width="14" height="50" rx="7" fill="#6FA8DC" transform="rotate(16 29 -158)"/>
+    <g transform="rotate(-8 18 -110)"><rect x="-8" y="-136" width="40" height="50" rx="3" fill="#FBF8F2" stroke="#BDB0A0" stroke-width="2"/>
+      <text x="12" y="-120" text-anchor="middle" class="disp" font-size="9" fill="#E0312B">CACI DEFORMER</text>
+      <path d="M-2 -110 h28 M-2 -103 h28 M-2 -96 h20" stroke="#8A8A8A" stroke-width="2.5"/></g>
+    <circle cx="10" cy="-112" r="7" fill="#E8B08A"/>
+    <rect x="80" y="-158" width="14" height="50" rx="7" fill="#6FA8DC" transform="rotate(-14 87 -158)"/>
+    <circle cx="96" cy="-112" r="7" fill="#E8B08A"/>
+    <path d="M48 -172 l10 6 l10 -6 v12 l-10 -6 l-10 6z" fill="#E0312B"/>
+    <circle cx="58" cy="-194" r="22" fill="#E8B08A"/>
+    <g fill="#E8742C"><circle cx="40" cy="-208" r="9"/><circle cx="50" cy="-216" r="9"/><circle cx="62" cy="-218" r="9"/><circle cx="73" cy="-212" r="9"/><circle cx="78" cy="-200" r="8"/><circle cx="37" cy="-196" r="7"/></g>
+    <circle cx="50" cy="-194" r="3" fill="#2A1F25"/><circle cx="66" cy="-194" r="3" fill="#2A1F25"/>
+    <path d="M40 -182 C48 -190 56 -184 58 -182 C60 -184 68 -190 76 -182 C68 -176 62 -178 58 -179 C54 -178 48 -176 40 -182Z" fill="#B0501E"/>
+    <circle cx="44" cy="-186" r="4" fill="#FF9A8B" opacity=".5"/>
+  </g></g>`;
+}
+function zvrndaSVG(x) {
+  return `<g id="zv" transform="translate(${x},400)"><g id="zvIn">
+    <g class="peek"><g id="zvHead">
+      <ellipse cx="-8" cy="-124" rx="36" ry="28" fill="#3CC6B8"/><circle cx="-34" cy="-112" r="12" fill="#3CC6B8"/><circle cx="18" cy="-112" r="12" fill="#3CC6B8"/>
+      <circle cx="-8" cy="-100" r="21" fill="#F6C7A8"/>
+      <circle cx="-16" cy="-104" r="5.5" fill="#fff"/><circle cx="0" cy="-104" r="5.5" fill="#fff"/>
+      <circle cx="-14" cy="-104" r="2.6" fill="#2A1F25"/><circle cx="2" cy="-104" r="2.6" fill="#2A1F25"/>
+      <path d="M-22 -110 l-4 -4 M-20 -111 l-2 -5 M6 -110 l4 -4 M4 -111 l2 -5" stroke="#2A1F25" stroke-width="1.8" stroke-linecap="round"/>
+      <circle cx="-30" cy="-92" r="6" fill="none" stroke="#FFC93C" stroke-width="2.5"/><circle cx="14" cy="-92" r="6" fill="none" stroke="#FFC93C" stroke-width="2.5"/>
+    </g></g>
+    <rect x="-66" y="-92" width="132" height="14" rx="4" fill="#276548"/>
+    <path d="M-62 -80 h124 l-6 78 h-112z" fill="#2F7A55"/>
+    <path d="M-40 -70 v60 M-14 -70 v60 M14 -70 v60 M40 -70 v60" stroke="#276548" stroke-width="4"/>
+    <circle cx="-44" cy="0" r="7" fill="#1C1622"/><circle cx="44" cy="0" r="7" fill="#1C1622"/>
+    <g transform="rotate(-25 40 -96)"><rect x="34" y="-118" width="9" height="30" rx="4" fill="#2A1F25"/><circle cx="38.5" cy="-122" r="9" fill="#55505F"/><rect x="31" y="-110" width="15" height="10" rx="2" fill="#FF6F61"/></g>
+    <circle cx="36" cy="-92" r="7" fill="#F6C7A8"/>
+  </g></g>`;
+}
+function maricaSVG(x) {
+  return `<g id="van" transform="translate(${x},400)">
+    <ellipse cx="140" cy="2" rx="150" ry="9" fill="rgba(0,0,0,.35)"/>
+    <rect x="0" y="-136" width="284" height="114" rx="18" fill="#F5F5F5"/>
+    <path d="M236 -136 h30 a18 18 0 0 1 18 18 v36 h-48z" fill="#E6EEF8"/>
+    <rect x="242" y="-124" width="34" height="34" rx="6" fill="#9FD3F2"/>
+    <rect x="0" y="-78" width="284" height="20" fill="#2E5EA8"/>
+    <text x="118" y="-92" text-anchor="middle" class="disp" font-size="30" fill="#2E5EA8">MARICA</text>
+    <rect x="20" y="-124" width="40" height="22" rx="4" fill="#3A4560"/><path d="M28 -124 v22 M38 -124 v22 M48 -124 v22" stroke="#9AA5C0" stroke-width="2"/>
+    <rect x="96" y="-150" width="80" height="14" rx="6" fill="#2A1F25"/>
+    <rect class="lr" x="100" y="-148" width="34" height="10" rx="4" fill="#FF3030"/>
+    <rect class="lb" x="138" y="-148" width="34" height="10" rx="4" fill="#3070FF"/>
+    <rect x="270" y="-50" width="16" height="10" rx="3" fill="#FFC93C"/>
+    <circle cx="62" cy="-20" r="24" fill="#1C1622"/><circle cx="62" cy="-20" r="10" fill="#9A9AA8"/>
+    <circle cx="222" cy="-20" r="24" fill="#1C1622"/><circle cx="222" cy="-20" r="10" fill="#9A9AA8"/>
+  </g>`;
+}
+
+/* ---------- Pozadine ---------- */
+const STARS = Array.from({ length: 40 }, () => [Math.random() * 800, Math.random() * 150, Math.random() * 1.6 + .4]);
+const stars = () => STARS.map(([x, y, r]) => `<circle cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" r="${r.toFixed(1)}" fill="#FFF2E2" opacity=".7"/>`).join('');
+function bg1() {
+  return `<defs>
+      <pattern id="brick" width="60" height="30" patternUnits="userSpaceOnUse"><rect width="60" height="30" fill="#4A2E3A"/><path d="M0 0.5h60M0 15.5h60M30 0v15M0 15v15M60 15v15" stroke="#38222C" stroke-width="2"/></pattern>
+      <linearGradient id="dark" x1="0" x2="1"><stop offset="0" stop-color="#07050C" stop-opacity="0"/><stop offset=".35" stop-color="#07050C" stop-opacity=".85"/><stop offset="1" stop-color="#07050C" stop-opacity=".97"/></linearGradient>
+      <radialGradient id="lamp" cx=".5" cy="0" r="1"><stop offset="0" stop-color="#FFC93C" stop-opacity=".35"/><stop offset="1" stop-color="#FFC93C" stop-opacity="0"/></radialGradient>
+    </defs>
+    <rect width="800" height="450" fill="#1B1430"/>${stars()}
+    <circle cx="110" cy="62" r="26" fill="#FFF2E2" opacity=".9"/><circle cx="121" cy="55" r="23" fill="#1B1430"/>
+    <rect x="0" y="120" width="800" height="282" fill="url(#brick)"/>
+    <rect x="70" y="170" width="80" height="60" rx="6" fill="#2A1F3A"/><rect x="74" y="174" width="72" height="52" rx="4" fill="#FFC93C" opacity=".25"/>
+    <path d="M300 160 L230 400 L370 400Z" fill="url(#lamp)"/>
+    <rect x="296" y="150" width="8" height="252" fill="#2A2236"/><path d="M286 150 h28 l-6 -16 h-16z" fill="#2A2236"/><ellipse cx="300" cy="152" rx="10" ry="4" fill="#FFC93C"/>
+    <rect x="500" y="0" width="300" height="402" fill="url(#dark)"/>
+    <rect x="0" y="400" width="800" height="50" fill="#2A2236"/><rect x="0" y="398" width="800" height="5" fill="#3A3150"/>
+    <text x="190" y="290" class="disp" font-size="22" fill="#5FD4A8" opacity=".55" transform="rotate(-6 190 290)">ZNANJE JE MOĆ</text>`;
+}
+function bg2() {
+  return `<defs><linearGradient id="dusk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2E2160"/><stop offset="1" stop-color="#C8536A"/></linearGradient></defs>
+    <rect width="800" height="450" fill="url(#dusk)"/>
+    <rect x="0" y="110" width="800" height="292" fill="#4F4170"/>
+    <path d="M0 110 h800" stroke="#3B3058" stroke-width="6"/>
+    <g opacity=".85">
+      <ellipse cx="160" cy="210" rx="90" ry="40" fill="#FF6F61" opacity=".5"/>
+      <text x="90" y="225" class="disp" font-size="46" fill="#FFC93C" transform="rotate(-5 160 210)">BUDI CACI</text>
+      <path d="M560 160 q30 -40 60 0 t60 0" stroke="#5FD4A8" stroke-width="8" fill="none" stroke-linecap="round"/>
+      <text x="610" y="230" class="disp" font-size="26" fill="#E9DCF5" transform="rotate(4 650 220)">KOBRA ♛</text>
+      <circle cx="380" cy="170" r="22" fill="none" stroke="#8A3CC8" stroke-width="7"/>
+    </g>
+    <rect x="0" y="400" width="800" height="50" fill="#2A2236"/><rect x="0" y="398" width="800" height="5" fill="#3A3150"/>
+    <g transform="translate(395,400)"><rect x="-22" y="-60" width="44" height="60" rx="6" fill="#5A5466"/><path d="M-22 -44 h44 M-22 -18 h44" stroke="#3E3A48" stroke-width="4"/>
+      <path class="flame" d="M-16 -60 Q-12 -96 0 -80 Q8 -110 16 -60Z" fill="#FF6F61"/><path class="flame" d="M-8 -60 Q-4 -82 4 -72 Q8 -88 10 -60Z" fill="#FFC93C"/></g>
+    <ellipse cx="770" cy="392" rx="30" ry="18" fill="#15121E"/><ellipse cx="740" cy="396" rx="22" ry="13" fill="#1E1A28"/>`;
+}
+function bg3() {
+  let win = '';
+  for (let r = 0; r < 4; r++) for (let c = 0; c < 6; c++) { if (r === 3 && (c === 2 || c === 3)) continue; const lit = (r * 7 + c * 3) % 5 < 3; win += `<rect x="${222 + c * 70}" y="${110 + r * 62}" width="46" height="38" rx="4" fill="${lit ? '#FFC93C' : '#2A2246'}" opacity="${lit ? .8 : 1}"/>`; }
+  return `<defs><linearGradient id="sky3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#140F24"/><stop offset="1" stop-color="#2E2252"/></linearGradient></defs>
+    <rect width="800" height="450" fill="url(#sky3)"/>${stars()}
+    <rect x="0" y="200" width="200" height="202" fill="#221A3A"/><rect x="640" y="170" width="160" height="232" fill="#221A3A"/>
+    <rect x="200" y="88" width="440" height="314" fill="#3E3566"/>
+    ${win}
+    <g class="flick"><rect x="262" y="26" width="316" height="56" rx="14" fill="#FF6F61"/><text x="420" y="66" text-anchor="middle" class="disp" font-size="36" fill="#FFF2E2">LAŽOGRAF</text></g>
+    <rect x="292" y="80" width="6" height="10" fill="#2A2236"/><rect x="542" y="80" width="6" height="10" fill="#2A2236"/>
+    <rect x="388" y="310" width="64" height="92" rx="6" fill="#2A2246"/><circle cx="442" cy="358" r="3.5" fill="#FFC93C"/>
+    <text x="420" y="300" text-anchor="middle" class="nun" font-size="11" fill="#BDB0E0" letter-spacing="2">GLASAJTE ZA OSKARA ZAOKRUZITE JEDAN</text>
+    <rect x="0" y="400" width="800" height="50" fill="#2A2236"/><rect x="0" y="398" width="800" height="5" fill="#3A3150"/>`;
+}
+
+/* ---------- Kraj i pobeda ---------- */
+let restartTo = level1;
+function showEnd({ eyebrow, red, title, html, btn = 'Probaj ponovo', next = level1 }) {
+  $('eEyebrow').textContent = eyebrow; $('eEyebrow').classList.toggle('red', !!red);
+  $('eTitle').textContent = title; $('eBody').innerHTML = html; $('againBtn').textContent = btn; restartTo = next;
+  $('endM').hidden = false; setTimeout(() => $('againBtn').focus(), 50);
+}
+$('againBtn').addEventListener('click', () => { $('endM').hidden = true; restartTo(); });
+async function lose(title, text) {
+  SFX.sad(); say('', text); await wait(900);
+  showEnd({ eyebrow: 'Pogrešan izbor', red: true, title, html: `<p>${text}</p>` });
+}
+async function confetti() {
+  const cols = ['#FFC93C', '#FF6F61', '#5FD4A8', '#E9DCF5', '#6FA8DC'], bits = [];
+  for (let i = 0; i < 70; i++) bits.push({ el: mk('rect', { width: 8, height: 12, rx: 2, fill: cols[i % 5] }), x: Math.random() * 800, y: -20 - Math.random() * 200, vy: 140 + Math.random() * 160, vx: (Math.random() - .5) * 60, r: Math.random() * 360, vr: (Math.random() - .5) * 600 });
+  let lt = performance.now();
+  await tween(2600, () => { const now = performance.now(), dt = (now - lt) / 1000; lt = now; for (const b of bits) { b.x += b.vx * dt; b.y += b.vy * dt; b.r += b.vr * dt; b.el.setAttribute('transform', `translate(${b.x},${b.y}) rotate(${b.r})`); } });
+  bits.forEach(b => b.el.remove());
+}
+
+/* ---------- NIVO 1: Mračna ulica ---------- */
+function level1() {
+  level = 1;
+  render(bg1() + mrakSVG(650, 1.1, true) + playerSVG(150));
+  const hey = side === 'caci' ? 'Psst… ti, naš čoveče. Konačno.' : side === 'student' ? 'Psst… ti, studentu. Da, baš ti.' : 'Psst… ti što stojiš po strani. Da, baš ti.';
+  say('??? (iz senke)', hey + ' Tvoj sledeći cilj: pohapsi sve studente. Bez pitanja.');
+  choices([
+    { label: '🚔 Uhapsi studente', fn: () => lose('Ne, ne, ne.', 'Uhapsio si studente, a glas iz senke se zadovoljno smeška. To nije pravi put. Probaj ponovo.') },
+    { label: '💩 Gađaj ga kakicom', fn: throwPoop },
+  ]);
+}
+async function throwPoop() {
+  say('', 'Nišaniš pravo u senku…');
+  const arm = document.getElementById('plArm');
+  await tween(220, t => arm.setAttribute('transform', `rotate(${-140 * t} 27 -104)`), easeOut);
+  SFX.whoosh();
+  const p = mk('g'); emoji('💩', 40, p);
+  const back = tween(200, t => arm.setAttribute('transform', `rotate(${-140 * (1 - t)} 27 -104)`));
+  await fly(p, [186, 300], [656, 235], 700, 150, 720); await back;
+  p.remove(); SFX.splat();
+  const sp = mk('g', { transform: 'translate(4,-158)' }, document.getElementById('mrakIn'));
+  sp.innerHTML = `<g class="pop"><path d="M-22 4 C-30 -10 -12 -20 -6 -12 C-2 -26 18 -22 14 -8 C30 -10 28 12 12 10 C10 24 -12 22 -10 10 C-26 18 -32 6 -22 4Z" fill="#7A4A28"/></g>`;
+  emoji('💩', 26, sp).setAttribute('y', -20);
+  await shake('mrakIn', 600, 8);
+  say('Oskar', 'FUJ! BLJAK! Ovo nije bilo u planu! Zapamtiću te!');
+  await wait(1100);
+  SFX.run();
+  await tween(900, t => at('mrak', 650 + 340 * t, 400, 1.1), easeIn);
+  say('', 'Glas iz senke je pobegao u mrak. Sad znaš kako se zove: Oskar. Studenti su bezbedni. Za sada.');
+  choices([{ label: 'Dalje →', cls: 'go', fn: level2 }]);
+}
+
+/* ---------- NIVO 2: Kobra i banda ---------- */
+function level2() {
+  level = 2;
+  render(bg2() + gangSVG('g1', 470, .9, '#3A3550') + gangSVG('g2', 690, .92, '#4A3A40') + gangSVG('g3', 750, .86, '#2F3A50') + kobraSVG(590, 1.12) + playerSVG(130));
+  say('', 'Iza ugla te čeka Kobra, šefica bande. Mišići kao frižider, flaša u ruci, a iza nje cela banda.');
+  choices([{ label: 'Dalje →', cls: 'go', fn: () => {
+    say('Kobra', 'Ej, mali. Pridruži nam se i evo ti 50 evra. Lake pare, ništa ne pitaš.');
+    choices([
+      { label: '💶 Uzmi 50€ i pridruži se', fn: () => lose('Prodao si se za 50€', 'Kobra ti je dala pedeset evra i majicu dva broja manju. Banda slavi, a ti si zaglavio. Probaj ponovo.') },
+      { label: '💦 Pljuni ih i reci „ĆACI!”', fn: spit },
+    ]);
+  } }]);
+}
+async function spit() {
+  await walk(130, 300, 700);
+  const b = bubbleAt(342, 196, 'ĆACI!', 110); SFX.pop();
+  await wait(550);
+  SFX.spit();
+  const drops = [0, 1, 2].map(i => { const d = mk('g'); d.innerHTML = '<ellipse rx="5" ry="4" fill="#BFE8FF" stroke="#7FC3E8" stroke-width="1.5"/>'; return fly(d, [312, 276], [590, 196 + i * 4], 520 + i * 70, 40).then(() => d.remove()); });
+  await Promise.all(drops);
+  const wet = mk('g', { transform: 'translate(-2,-184)' }, document.getElementById('kobraIn'));
+  wet.innerHTML = '<g class="pop"><circle r="7" fill="#BFE8FF" opacity=".9"/><circle cx="9" cy="5" r="4" fill="#BFE8FF" opacity=".9"/><circle cx="-8" cy="7" r="3" fill="#BFE8FF" opacity=".9"/></g>';
+  await shake('kobraIn', 450, 6);
+  say('Kobra', 'Kako si nas nazvao?! … Momci, bežimo, ovaj ne zna za strah!');
+  for (const id of ['g1In', 'g2In', 'g3In']) { const q = mk('text', { x: 0, y: -176, 'text-anchor': 'middle', class: 'disp', 'font-size': 30, fill: '#FFC93C' }, document.getElementById(id)); q.textContent = '?!'; }
+  const bottle = document.getElementById('bottle');
+  await tween(520, t => bottle.setAttribute('transform', `translate(${-10 * t},${205 * t * t}) rotate(${170 * t} 72 -205)`), x => x);
+  SFX.crash();
+  bottle.innerHTML = '<path d="M50 -4 l8 -8 l4 6z M70 -2 l6 -10 l6 8z M88 -4 l4 -6 l6 6z" fill="#2F8F5B"/>';
+  bottle.setAttribute('transform', '');
+  await wait(500);
+  b.remove(); SFX.run();
+  await tween(1000, t => { at('kobra', 590 + 420 * t, 400, 1.12); at('g1', 470 + 480 * t, 400, .9); at('g2', 690 + 380 * t, 400, .92); at('g3', 750 + 380 * t, 400, .86); }, easeIn);
+  say('', 'Banda se razbežala. Na zemlji su ostali samo razbijena flaša i njihov ponos.');
+  choices([{ label: 'Dalje →', cls: 'go', fn: level3 }]);
+}
+
+/* ---------- NIVO 3: Ćaci policija na trgu ---------- */
+const rnd = (a, b) => a + Math.random() * (b - a);
+function bg4() {
+  let bld = '';
+  [[0, 170, 120], [110, 130, 100], [200, 190, 90], [520, 150, 110], [620, 120, 90], [700, 180, 100]].forEach(([x, y, w], i) => {
+    bld += `<rect x="${x}" y="${y}" width="${w}" height="${402 - y}" fill="${i % 2 ? '#2A2050' : '#33285E'}"/>`;
+    for (let r = y + 20; r < 360; r += 40) for (let c = x + 14; c < x + w - 20; c += 30) bld += `<rect x="${c}" y="${r}" width="14" height="20" rx="2" fill="${(r + c) % 3 ? '#FFC93C' : '#1F1840'}" opacity=".7"/>`;
+  });
+  return `<defs><linearGradient id="sky4" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2E2160"/><stop offset="1" stop-color="#E07A5F"/></linearGradient></defs>
+    <rect width="800" height="450" fill="url(#sky4)"/>
+    <circle cx="420" cy="120" r="40" fill="#FFC93C" opacity=".55"/>
+    ${bld}
+    <rect x="290" y="210" width="230" height="192" fill="#3E3566"/>
+    <path d="M280 210 L405 150 L530 210Z" fill="#4A3F78"/>
+    ${[310, 350, 390, 430, 470].map(x => `<rect x="${x}" y="225" width="14" height="177" fill="#5A4E8C"/>`).join('')}
+    <rect x="34" y="120" width="6" height="282" fill="#1F1840"/><rect x="376" y="120" width="6" height="282" fill="#1F1840"/>
+    <path d="M40 132 Q208 150 376 132" stroke="#1F1840" stroke-width="2" fill="none"/>
+    <g transform="rotate(-1 208 150)"><rect x="70" y="130" width="276" height="40" rx="6" fill="#FFF2E2" stroke="#241A3D" stroke-width="3"/>
+    <text x="208" y="157" text-anchor="middle" class="disp" font-size="17" fill="#E0312B">ALEKSANDRE PEDERU</text></g>
+    <rect x="0" y="400" width="800" height="50" fill="#2A2236"/><rect x="0" y="398" width="800" height="5" fill="#3A3150"/>
+    <g id="bhud" opacity="0"><rect x="590" y="14" width="196" height="40" rx="14" fill="rgba(20,15,36,.8)"/>
+      <text id="bTime" x="606" y="41" class="nun" font-size="18" fill="#FFF2E2">⏱ 10 s</text>
+      <text id="bHits" x="700" y="41" class="nun" font-size="18" fill="#FFC93C">💩 0</text></g>`;
+}
+function kidSVG(id, x, hoodie, hair, skin, pony) {
+  return `<g id="${id}" transform="translate(${x},400)">
+    <ellipse cx="0" cy="2" rx="28" ry="6" fill="rgba(0,0,0,.3)"/>
+    <rect x="-15" y="-48" width="12" height="46" rx="5" fill="#2E3560"/><rect x="3" y="-48" width="12" height="46" rx="5" fill="#2E3560"/>
+    <rect x="-19" y="-8" width="19" height="10" rx="5" fill="#FBF8F2"/><rect x="1" y="-8" width="19" height="10" rx="5" fill="#FBF8F2"/>
+    <rect x="-30" y="-98" width="13" height="44" rx="6" fill="${hoodie}" transform="rotate(10 -24 -98)"/>
+    <rect x="-23" y="-106" width="46" height="62" rx="16" fill="${hoodie}"/>
+    <g id="${id}Arm"><rect x="18" y="-98" width="13" height="44" rx="6" fill="${hoodie}" transform="rotate(-10 24 -98)"/><circle cx="32" cy="-52" r="6.5" fill="${skin}"/></g>
+    ${pony ? `<ellipse cx="-24" cy="-128" rx="9" ry="16" fill="${hair}" transform="rotate(20 -24 -128)"/>` : ''}
+    <circle cx="0" cy="-128" r="22" fill="${skin}"/>
+    <path d="M-23 -130 C-24 -160 24 -160 23 -130 C15 -144 -6 -147 -23 -130Z" fill="${hair}"/>
+    <circle cx="-7" cy="-127" r="3" fill="#2A1F25"/><circle cx="8" cy="-127" r="3" fill="#2A1F25"/>
+    <path d="M-6 -116 Q1 -110 8 -116" stroke="#2A1F25" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+  </g>`;
+}
+function copSVG(id, x, s) {
+  return `<g id="${id}" class="cop" transform="translate(${x},400) scale(${s})">
+    <ellipse cx="0" cy="2" rx="26" ry="6" fill="rgba(0,0,0,.3)"/>
+    <rect x="-15" y="-50" width="13" height="50" rx="4" fill="#1E2A4A"/><rect x="2" y="-50" width="13" height="50" rx="4" fill="#1E2A4A"/>
+    <rect x="-19" y="-8" width="18" height="9" rx="3" fill="#0E1222"/><rect x="1" y="-8" width="18" height="9" rx="3" fill="#0E1222"/>
+    <g class="armsup"><rect x="-36" y="-156" width="12" height="46" rx="6" fill="#2C3E70" transform="rotate(-18 -30 -110)"/><rect x="24" y="-156" width="12" height="46" rx="6" fill="#2C3E70" transform="rotate(18 30 -110)"/></g>
+    <rect x="-24" y="-112" width="48" height="66" rx="14" fill="#2C3E70"/>
+    <rect x="-24" y="-60" width="48" height="8" fill="#1E2A4A"/><circle cx="-11" cy="-98" r="4" fill="#FFC93C"/>
+    <g class="calm"><rect x="-33" y="-108" width="12" height="44" rx="6" fill="#2C3E70"/><rect x="-40" y="-74" width="6" height="40" rx="3" fill="#111"/><circle cx="-27" cy="-64" r="6" fill="#F0C2A0"/></g>
+    <circle cx="0" cy="-134" r="21" fill="#F0C2A0"/>
+    <path d="M-24 -137 C-24 -172 24 -172 24 -137Z" fill="#1E2A4A"/><rect x="-27" y="-141" width="54" height="7" rx="3" fill="#141C34"/>
+    <g class="calm"><path d="M-13 -131 l8 3 M13 -131 l-8 3" stroke="#2A1F25" stroke-width="2.6" stroke-linecap="round"/><circle cx="-7" cy="-125" r="2.6" fill="#2A1F25"/><circle cx="7" cy="-125" r="2.6" fill="#2A1F25"/><path d="M-6 -115 h12" stroke="#2A1F25" stroke-width="2.6" stroke-linecap="round"/></g>
+    <g class="cryface"><path d="M-11 -125 q4 -5 8 0 M3 -125 q4 -5 8 0" stroke="#2A1F25" stroke-width="2.6" fill="none" stroke-linecap="round"/><ellipse cx="0" cy="-114" rx="7" ry="6" fill="#7A1E3A"/>
+      <g class="tears"><path d="M-10 -122 q-4 9 0 13 q4 -4 0 -13z" fill="#7FD3F5"/><path d="M10 -122 q-4 9 0 13 q4 -4 0 -13z" fill="#7FD3F5"/></g></g>
+    <g class="shield calm"><rect x="0" y="-124" width="40" height="100" rx="9" fill="rgba(190,215,240,.6)" stroke="#9FB8D8" stroke-width="3"/>
+      <text x="20" y="-74" text-anchor="middle" dominant-baseline="central" class="disp" font-size="17" fill="#1E2A4A" transform="rotate(-90 20 -74)">ĆACI</text></g>
+  </g>`;
+}
+function acaSVG(x) {
+  return `<g id="aca" class="cop" transform="translate(${x},400)">
+    <ellipse cx="0" cy="2" rx="50" ry="8" fill="rgba(0,0,0,.35)"/>
+    <rect x="-24" y="-40" width="18" height="40" rx="5" fill="#1E2A4A"/><rect x="6" y="-40" width="18" height="40" rx="5" fill="#1E2A4A"/>
+    <ellipse cx="-15" cy="-3" rx="15" ry="6" fill="#0E1222"/><ellipse cx="15" cy="-3" rx="15" ry="6" fill="#0E1222"/>
+    <g class="armsup"><rect x="-66" y="-176" width="16" height="56" rx="8" fill="#2C3E70" transform="rotate(-20 -58 -120)"/><rect x="50" y="-176" width="16" height="56" rx="8" fill="#2C3E70" transform="rotate(20 58 -120)"/></g>
+    <g class="calm"><rect x="-66" y="-122" width="16" height="56" rx="8" fill="#2C3E70" transform="rotate(10 -58 -122)"/><circle cx="-66" cy="-66" r="9" fill="#F2B79A"/>
+      <rect x="50" y="-122" width="16" height="56" rx="8" fill="#2C3E70" transform="rotate(-10 58 -122)"/><rect x="62" y="-112" width="8" height="74" rx="4" fill="#111" transform="rotate(-25 66 -70)"/><circle cx="66" cy="-66" r="9" fill="#F2B79A"/></g>
+    <ellipse cx="0" cy="-82" rx="54" ry="56" fill="#2C3E70"/>
+    <ellipse cx="0" cy="-66" rx="40" ry="36" fill="#34498A"/>
+    <circle cx="0" cy="-104" r="3.5" fill="#FFC93C"/><circle cx="0" cy="-84" r="3.5" fill="#FFC93C"/><circle cx="0" cy="-64" r="3.5" fill="#FFC93C"/>
+    <rect x="-54" y="-44" width="108" height="10" rx="4" fill="#141C34"/><rect x="-9" y="-46" width="18" height="14" rx="3" fill="#FFC93C"/>
+    <rect x="-34" y="-124" width="26" height="14" rx="3" fill="#FFC93C"/><text x="-21" y="-113" text-anchor="middle" class="nun" font-size="10" fill="#241A3D">ŠEF</text>
+    <ellipse cx="0" cy="-140" rx="24" ry="9" fill="#E8A486"/>
+    <circle cx="0" cy="-162" r="28" fill="#F2B79A"/>
+    <circle cx="-28" cy="-160" r="7" fill="#F2B79A"/><circle cx="28" cy="-160" r="7" fill="#F2B79A"/>
+    <path d="M-32 -184 C-32 -214 32 -214 32 -184Z" fill="#1E2A4A"/><path d="M-36 -186 h72 l-10 10 h-52z" fill="#141C34"/>
+    <circle cx="0" cy="-200" r="6" fill="#FFC93C"/>
+    <path d="M-16 -170 h32" stroke="#2A1F25" stroke-width="5" stroke-linecap="round"/>
+    <g class="calm"><circle cx="-9" cy="-162" r="3" fill="#2A1F25"/><circle cx="9" cy="-162" r="3" fill="#2A1F25"/><path d="M-8 -148 Q0 -152 8 -148" stroke="#2A1F25" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+      <path d="M24 -176 q4 7 0 10 q-4 -3 0 -10z" fill="#7FD3F5"/><path d="M-26 -150 q4 7 0 10 q-4 -3 0 -10z" fill="#7FD3F5"/></g>
+    <g class="cryface"><path d="M-14 -162 q5 -6 10 0 M4 -162 q5 -6 10 0" stroke="#2A1F25" stroke-width="2.8" fill="none" stroke-linecap="round"/><ellipse cx="0" cy="-147" rx="9" ry="7" fill="#7A1E3A"/>
+      <g class="tears"><path d="M-12 -158 q-5 11 0 16 q5 -5 0 -16z" fill="#7FD3F5"/><path d="M12 -158 q-5 11 0 16 q5 -5 0 -16z" fill="#7FD3F5"/></g></g>
+  </g>`;
+}
+
+const SLOTS = [445, 480, 515, 550, 585, 620, 655, 690, 720];
+let game = null;
+function level3() {
+  level = 3;
+  const cops = SLOTS.map((x, i) => copSVG('c' + i, x, i % 2 ? .82 : .9)).join('');
+  render(bg4() + acaSVG(738) + `<g id="groundL"></g><g id="copL">${cops}</g>`
+    + kidSVG('k1', 50, '#5FD4A8', '#2A1F25', '#E8B08A', true) + kidSVG('k2', 115, '#6FA8DC', '#C7863A', '#F2C29B', false)
+    + kidSVG('k3', 285, '#FFC93C', '#5A2E1E', '#C98B5E', true) + playerSVG(200));
+  say('', 'Na trgu te čekaju drugi studenti. Preko puta stoji masa ćaci policije sa štitovima, a iza njih njihov šef, Debeli Aca Šipka.');
+  choices([{ label: 'Dalje →', cls: 'go', fn: policeChoice }]);
+}
+function policeChoice() {
+  say('Debeli Aca Šipka', 'Raziđite se! Idite kući, ovde nema ništa da se vidi!');
+  choices([
+    { label: '🏠 Idi kući', fn: goHome },
+    { label: '💩 Gađaj kakicom!', fn: () => battle().then(battleDone) },
+  ]);
+}
+async function goHome() {
+  await walk(200, 150, 500);
+  say('Mila (studentkinja)', 'Hej, ne možeš to tako da radiš! Mi nismo odustali, pa nemoj ni ti! Bori se za SRBIJU!');
+  SFX.pop();
+  const b = bubbleAt(62, 196, 'HEJ!', 90);
+  await wait(400);
+  await walk(150, 200, 450);
+  b.remove();
+  choices([
+    { label: '🏠 Ipak idi kući', fn: goHome },
+    { label: '💩 Gađaj kakicom!', fn: () => battle().then(battleDone) },
+  ]);
+}
+
+const KIDS = [['k1', 50], ['k2', 115], ['k3', 285]];
+function battle() {
+  say('', 'Klikni ili tapkaj na policajce i gađaj ih kakicom! Imaš 10 sekundi, a drugi studenti gađaju sa tobom.');
+  choices([]);
+  document.getElementById('bhud').setAttribute('opacity', 1);
+  const G = game = { t: 0, hits: 0, cops: [], ground: [], proj: [], over: false, done: false, nextSpawn: 1.2, npc: [.4, .8, 1.1], idc: 0, gid: 0, last: performance.now() };
+  SLOTS.forEach((x, i) => G.cops.push({ el: document.getElementById('c' + i), x, s: i % 2 ? .82 : .9, state: 'stand', vx: 0, rot: 0, ph: Math.random() * 6, tripped: new Set() }));
+  G.aca = { el: document.getElementById('aca'), x: 738, s: 1, state: 'idle', vx: 0, rot: 0, ph: 0, tripped: new Set(), boss: true };
+  $('stage').style.cursor = 'crosshair';
+  SFX.whoosh();
+  return new Promise(res => {
+    G.finish = res;
+    const loop = now => { if (G.done || game !== G) return; const dt = Math.min(.05, (now - G.last) / 1000); G.last = now; stepBattle(G, dt); requestAnimationFrame(loop); };
+    requestAnimationFrame(loop);
+  });
+}
+const hittable = c => c && (c.state === 'stand' || c.state === 'march');
+function throwAt(G, from, c, tx, ty) {
+  const el = mk('g'); emoji('💩', 30, el);
+  const x1 = c ? c.x : tx, y1 = c ? 400 - 128 * c.s : ty;
+  G.proj.push({ el, x0: from[0], y0: from[1], x1, y1, t: 0, dur: .42 + Math.abs(x1 - from[0]) / 1600, target: c });
+  SFX.whoosh();
+}
+function swing(id) { const a = document.getElementById(id); if (!a) return; a.setAttribute('transform', 'rotate(-130 24 -100)'); setTimeout(() => a.removeAttribute('transform'), 160); }
+function svgPt(e) { const s = svg(), p = s.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; return p.matrixTransform(s.getScreenCTM().inverse()); }
+function playerThrow(tx, ty) {
+  const G = game; if (!G || G.over || G.cd > 0) return; G.cd = .16;
+  let best = null, bd = 60;
+  for (const c of G.cops) if (hittable(c)) { const d = Math.abs(c.x - tx); if (d < bd && ty > 400 - 190 * c.s) { bd = d; best = c; } }
+  swing('plArm'); throwAt(G, [236, 344], best, tx, Math.min(396, ty));
+}
+$('stage').addEventListener('pointerdown', e => { if (!game || game.over || game.done) return; e.preventDefault(); const p = svgPt(e); playerThrow(p.x, p.y); });
+addEventListener('keydown', e => { if (e.key !== ' ' || !game || game.over || game.done) return; e.preventDefault(); const t = game.cops.filter(hittable); const c = t[Math.floor(Math.random() * t.length)]; if (c) playerThrow(c.x, 300); });
+function groundPoop(G, x) { const g = mk('g', { transform: `translate(${x},392)` }, document.getElementById('groundL')); emoji('💩', 22, g); G.ground.push({ x, id: G.gid++ }); }
+function cry(c) {
+  c.state = 'cry'; c.vx = c.boss ? 85 : rnd(150, 230); c.el.classList.add('crying');
+  tone(c.boss ? 260 : rnd(480, 620), .55, { type: 'sawtooth', vol: .035, to: c.boss ? 150 : 300 });
+}
+function stepBattle(G, dt) {
+  G.t += dt; G.cd = Math.max(0, G.cd - dt);
+  const left = Math.max(0, Math.ceil(10 - G.t));
+  if (!G.over) { $('bTime').textContent = `⏱ ${left} s`; }
+  // nova policija dolazi
+  if (!G.over && G.t < 8.5) {
+    G.nextSpawn -= dt;
+    if (G.nextSpawn <= 0) {
+      G.nextSpawn = rnd(.5, .9);
+      if (G.cops.filter(hittable).length < 7) {
+        const id = 'cn' + G.idc++, s = Math.random() < .5 ? .82 : .9;
+        document.getElementById('copL').insertAdjacentHTML('beforeend', copSVG(id, 880, s));
+        G.cops.push({ el: document.getElementById(id), x: 880, s, state: 'march', vx: -150, slot: SLOTS[Math.floor(Math.random() * SLOTS.length)] + rnd(-12, 12), rot: 0, ph: Math.random() * 6, tripped: new Set() });
+      }
+    }
+    // drugi studenti gađaju
+    KIDS.forEach(([id, kx], i) => {
+      G.npc[i] -= dt;
+      if (G.npc[i] <= 0) { G.npc[i] = rnd(.55, 1.05); const t = G.cops.filter(hittable); if (t.length) { swing(id + 'Arm'); throwAt(G, [kx + 32, 348], t[Math.floor(Math.random() * t.length)]); } }
+    });
+  }
+  // kakice u letu
+  for (const p of G.proj) {
+    p.t += dt; const k = Math.min(1, p.t / p.dur);
+    p.el.setAttribute('transform', `translate(${lerp(p.x0, p.x1, k)},${lerp(p.y0, p.y1, k) - 110 * 4 * k * (1 - k)}) rotate(${k * 600})`);
+    if (k >= 1) {
+      p.el.remove(); p.done = true;
+      if (hittable(p.target)) {
+        const c = p.target; G.hits++; $('bHits').textContent = `💩 ${G.hits}`;
+        noise(.2, { vol: .25, freq: 800 });
+        const sp = mk('g', { transform: 'translate(0,-160)' }, c.el); emoji('💩', 22, sp);
+        cry(c); groundPoop(G, c.x + rnd(10, 40));
+      } else groundPoop(G, p.x1 + rnd(-10, 10));
+    }
+  }
+  G.proj = G.proj.filter(p => !p.done);
+  // policija: stoji, maršira, plače i beži, saplete se
+  for (const c of [...G.cops, G.aca]) {
+    if (c.gone) continue;
+    let bob = 0;
+    if (c.state === 'march') { c.x += c.vx * dt; bob = Math.abs(Math.sin(G.t * 10 + c.ph)) * 3; if (c.x <= c.slot) { c.x = c.slot; c.state = 'stand'; } }
+    else if (c.state === 'stand') { bob = Math.sin(G.t * 3 + c.ph) * 1.2; }
+    else if (c.state === 'idle') { c.rot = Math.sin(G.t * 30) * 1.5; }
+    else if (c.state === 'cry') {
+      c.x += c.vx * dt; bob = Math.abs(Math.sin(G.t * (c.boss ? 9 : 16) + c.ph)) * (c.boss ? 8 : 6); c.rot = c.boss ? Math.sin(G.t * 9) * 6 : 0;
+      for (const g of G.ground) if (!c.tripped.has(g.id) && Math.abs(c.x - g.x) < 12) {
+        c.tripped.add(g.id);
+        if (c.boss ? !c.fell : ((c.trips || 0) < 2 && Math.random() < .3)) { c.trips = (c.trips || 0) + 1; c.fell = true; c.state = 'trip'; c.tt = c.boss ? 1.3 : .8; c.rot = 0; tone(110, .25, { type: 'sine', vol: .18, to: 50 }); noise(.12, { vol: .15, freq: 600 }); const st = mk('text', { y: -60, 'text-anchor': 'middle', 'font-size': 20 }, c.el); st.textContent = '💫'; c.star = st; break; }
+      }
+      if (c.x > 900) { c.gone = true; c.el.remove(); if (c.boss) { G.done = true; G.finish(); } }
+    } else if (c.state === 'trip') {
+      c.tt -= dt; c.rot = Math.min(84, c.rot + dt * 600);
+      if (c.tt <= 0) { c.state = 'cry'; c.rot = 0; if (c.star) { c.star.remove(); c.star = null; } }
+    }
+    const sx = c.state === 'cry' || c.state === 'trip' ? -c.s : c.s;
+    c.el.setAttribute('transform', `translate(${c.x},${400 - bob}) rotate(${c.rot}) scale(${sx},${c.s})`);
+  }
+  G.cops = G.cops.filter(c => !c.gone);
+  if (!G.over && G.t >= 10) { G.over = true; endBattle(G); }
+}
+async function endBattle(G) {
+  $('stage').style.cursor = '';
+  $('bTime').textContent = '⏱ 0 s';
+  say('', 'Vreme je isteklo! Policija plače i beži sa trga…');
+  G.cops.filter(hittable).forEach((c, i) => setTimeout(() => { if (hittable(c)) cry(c); }, i * 140));
+  const t0 = performance.now();
+  while (G.cops.length && performance.now() - t0 < 3000) await wait(150);
+  const A = G.aca; A.state = 'march'; A.vx = -120; A.slot = 540; A.rot = 0;
+  say('Debeli Aca Šipka', 'Šta je ovo?! Gde su mi svi?!');
+  while (A.state === 'march') await wait(100);
+  await wait(500);
+  say('Debeli Aca Šipka', 'Mamaaa! Ja sam samo šef, nisam ja ništa kriv!');
+  await wait(1000);
+  groundPoop(G, 610);
+  cry(A);
+}
+async function battleDone() {
+  say('', `Trg je slobodan! Studenti su pogodili ${game.hits} puta, a Debeli Aca Šipka je bežao poslednji.`);
+  SFX.win();
+  choices([{ label: 'Dalje →', cls: 'go', fn: level4 }]);
+}
+
+/* ---------- NIVO 4: Ispred LAŽOGRAF-a ---------- */
+function level4() {
+  level = 4;
+  render(bg3() + zvrndaSVG(712) + brunoSVG(500) + mrakSVG(330, 1.1, false, true) + playerSVG(80));
+  say('', 'Ispred zgrade LAŽOGRAF stoji Oskar. Ovaj put mu se vidi faca. Pored njega kentaur Bruno, pola konj, pola kolumnista. Iza kontejnera viri voditeljka Zvrnda sa mikrofonom.');
+  choices([{ label: 'Dalje →', cls: 'go', fn: () => {
+    say('Oskar', 'Opet ti?! Dobro, dobro… ajde da se pomirimo. Pridruži nam se: kafa, kolači i naslovna strana samo za tebe.');
+    choices([
+      { label: '🚔 HAPSI', fn: arrest },
+      { label: '🤝 Pridruži im se', fn: join },
+    ]);
+  } }]);
+}
+async function arrest() {
+  say('', 'UIU-UIU! Stiže marica!');
+  const s = svg(); const siren = mk('rect', { width: 800, height: 450, class: 'siren' });
+  s.insertAdjacentHTML('beforeend', maricaSVG(-320)); const fx = $('fx'); s.appendChild(fx);
+  SFX.siren(); SFX.engine();
+  await tween(1400, t => at('van', lerp(-320, 120, t)), easeOut);
+  const lines = [['mrak', 'Oskar', 'Čekajte, ja sam samo prolazio!'], ['bruno', 'Kentaur Bruno', 'Iiiiihaaa… mislim, nisam ja!'], ['zv', 'Voditeljka Zvrnda', 'Ovo je ekskluziva! Snimajte me!']];
+  for (const [id, who, line] of lines) {
+    say(who, line);
+    const el = document.getElementById(id), tr = el.getAttribute('transform'), x0 = +tr.match(/translate\(([-\d.]+)/)[1], sc = (tr.match(/scale\(([\d.]+)/) || [0, 1])[1];
+    await wait(500);
+    SFX.pop();
+    await tween(550, t => { el.setAttribute('transform', `translate(${lerp(x0, 260, t)},${400 - Math.sin(t * Math.PI) * 60}) scale(${sc * (1 - t * .7)})`); el.setAttribute('opacity', 1 - t); }, easeIO);
+    el.remove();
+  }
+  say('', 'Vrata se zatvaraju. Bum! Cela ekipa je spakovana.');
+  SFX.stamp(); await wait(600);
+  SFX.engine();
+  await tween(1200, t => at('van', lerp(120, 920, t)), easeIn);
+  siren.remove();
+  SFX.win(); confetti();
+  const was = cursed; setCursed(false);
+  say('', 'Pobeda! Ulica je mirna, a studenti mogu da uče.');
+  await wait(1300);
+  showEnd({ eyebrow: 'Pobeda!', title: 'Ekipa je spakovana', btn: 'Igraj ponovo',
+    html: `<p>Marica je odvezla Šefa Mraka, kentaura Bruna i voditeljku Zvrndu. Studenti su bezbedni.</p>${was ? '<p class="warn" style="background:#D8F5E8;color:#1E6B45">Natpis ĆACI ti je skinut. Opet si čist!</p>' : ''}` });
+}
+async function join() {
+  await walk(80, 236, 900);
+  say('Oskar', 'Dobrodošao u ekipu! Evo ti bedž, nosi ga s ponosom. Zauvek.');
+  await wait(500);
+  setCursed(true);
+  const tag = document.getElementById('tag'); tag.classList.remove('popin'); void tag.getBBox(); tag.classList.add('popin');
+  SFX.stamp(); await wait(250); SFX.sad();
+  await wait(1500);
+  showEnd({ eyebrow: 'Kraj', red: true, title: 'Sad si ćaci', btn: 'Probaj ponovo',
+    html: '<p>Iznad glave ti piše <b>ĆACI</b>. Zauvek. Ostaje i kad zatvoriš igru.</p><p class="warn">Jedini način da ga skineš: pređi igru kako treba.</p>' });
+}
+
+/* ---------- Početak ---------- */
+function intro() { $('introWarn').hidden = !cursed; renderHud(); }
+let side = null;
+const SIDE_NAMES = { caci: 'Ćaci', student: 'Student', neutral: 'Neutralan' };
+for (const b of document.querySelectorAll('#sides .side')) b.addEventListener('click', () => {
+  ac(); SFX.click(); side = b.dataset.side;
+  $('sideTxt').textContent = SIDE_NAMES[side]; $('sidePill').hidden = false;
+  $('introM').hidden = true; level1();
+});
+intro();
+render(bg1() + playerSVG(150));
+say('', 'Spremi se…');
+})();
+</script>
+</body>
+</html>

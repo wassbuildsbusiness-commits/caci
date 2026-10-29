@@ -1,0 +1,849 @@
+<!doctype html>
+<html lang="bs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Avdulj i Dragan</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Nunito:wght@600;700;800;900&display=swap">
+<style>
+/* Layout: traka gore, trkačka staza (canvas) preko ostatka; Avdulj jaše konja Dragana kroz brda oko Pazara */
+:root{
+  --night:#241A3D; --panel:#34285A; --panel-2:#423470; --line:#54458A;
+  --cream:#FFF2E2; --muted:#BDB0E0; --mustard:#FFC93C; --coral:#FF6F61; --mint:#5FD4A8;
+  --display:"Bagel Fat One","Arial Rounded MT Bold","Trebuchet MS",system-ui,sans-serif;
+  --body:"Nunito","Segoe UI",system-ui,-apple-system,sans-serif;
+  color-scheme:dark;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box;
+}
+html,body{height:100%}
+body{margin:0;background:var(--night);color:var(--cream);font-family:var(--body);font-size:15px;overflow:hidden;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,a:focus-visible{outline:3px solid var(--mustard);outline-offset:2px}
+.app{height:100%;max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:10px;box-sizing:border-box;
+  padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand h1{margin:0;font-family:var(--display);font-weight:400;font-size:clamp(22px,5vw,32px);line-height:1;color:var(--mustard)}
+.back{display:inline-flex;align-items:center;gap:6px;background:var(--panel);border:2px solid var(--line);border-radius:999px;padding:5px 12px 5px 9px;font-weight:900;color:var(--cream);text-decoration:none;font-size:14px}
+.back:hover{background:var(--panel-2)}
+.pills{display:flex;gap:6px;flex-wrap:wrap}
+.pill{background:var(--panel);border:2px solid var(--line);border-radius:999px;padding:5px 12px;font-weight:900;font-variant-numeric:tabular-nums;display:flex;gap:6px;align-items:baseline}
+.pill small{font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.icon-btn{width:36px;height:36px;border-radius:50%;border:2px solid var(--line);background:var(--panel);display:grid;place-items:center;padding:0}
+.icon-btn svg{width:18px;height:18px}
+.stage{position:relative;flex:1;min-height:260px;border-radius:22px;overflow:hidden;background:#8FD3F2;box-shadow:inset 0 0 0 3px var(--line)}
+canvas{display:block;width:100%;height:100%;touch-action:none;cursor:pointer}
+.toast{position:absolute;left:50%;top:14px;transform:translate(-50%,-10px);opacity:0;background:var(--cream);color:var(--night);font-weight:900;padding:8px 14px;border-radius:14px;max-width:80%;text-align:center;transition:.2s;pointer-events:none;box-shadow:0 5px 0 rgba(0,0,0,.18)}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.modal-wrap{position:fixed;inset:0;background:rgba(20,12,36,.55);display:grid;place-items:center;z-index:30;padding:16px;box-sizing:border-box}
+.card{width:100%;max-width:440px;max-height:100%;overflow:auto;background:var(--cream);color:var(--night);border-radius:26px;padding:22px;box-sizing:border-box;box-shadow:0 10px 0 rgba(0,0,0,.25)}
+.card .eyebrow{font-size:12px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:#2E8B57}
+.card h2{font-family:var(--display);font-weight:400;font-size:36px;line-height:1.05;margin:6px 0 8px;color:#9A5B2E;text-wrap:balance}
+.card p{margin:0 0 10px;font-weight:700;line-height:1.45}
+.card ul{margin:0 0 12px;padding-left:20px;font-weight:700;line-height:1.5}
+.card kbd{background:#E9DCF5;border-radius:6px;padding:1px 6px;font-family:inherit;font-weight:900;font-size:13px}
+.big{display:block;width:100%;padding:14px;border:0;border-radius:16px;background:#241A3D;color:var(--cream);font-weight:900;font-size:17px;margin-top:10px;text-align:center;text-decoration:none;box-sizing:border-box}
+.big.alt{background:#E9DCF5;color:#241A3D}
+.big[disabled]{opacity:.5;cursor:not-allowed}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:10px 0}
+.stats div{background:#F3E4D2;border-radius:14px;padding:10px;text-align:center}
+.stats b{display:block;font-family:var(--display);font-weight:400;font-size:26px;font-variant-numeric:tabular-nums}
+.stats small{font-size:11px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:#8A6A4A}
+#petStatus.bad{color:#C0392B}
+@media (max-width:560px){ .pill{padding:4px 9px;font-size:13px} .pill small{font-size:9px} .pills{gap:4px} .app{gap:8px;padding-block:8px} }
+.namefield{display:flex;flex-direction:column;gap:4px;margin:6px 0 10px;font-size:12px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:#8A6A4A}
+.namefield input{font:inherit;font-size:16px;font-weight:800;letter-spacing:0;text-transform:none;color:#241A3D;background:#fff;border:2px solid #E2D2BE;border-radius:12px;padding:10px 12px;width:100%;box-sizing:border-box}
+.namefield input:focus{outline:none;border-color:#8A5BD0;box-shadow:0 0 0 3px rgba(138,91,208,.2)}
+.lbw h3{margin:12px 0 6px;font-size:12px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:#8A6A4A}
+.lb{list-style:none;margin:0 0 6px;padding:0;display:flex;flex-direction:column;gap:4px}
+.lb li{display:flex;align-items:center;gap:10px;background:#F3E4D2;border-radius:10px;padding:7px 10px;font-weight:800;font-size:14px}
+.lb li.me{background:#FFE7A3;box-shadow:inset 0 0 0 2px #E8B82A}
+.lb .rk{width:24px;text-align:center;font-weight:900;color:#8A6A4A;flex:none}
+.lb .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb .ex{color:#8A6A4A;font-size:12px;flex:none}
+.lb b{font-variant-numeric:tabular-nums;flex:none}
+
+/* ---------- Moderan izgled i prilagođavanje svim ekranima ---------- */
+body{background:radial-gradient(1200px 620px at 50% -12%,#3A2A66 0%,transparent 62%),var(--night)}
+.pill,.back,.icon-btn{background:rgba(52,40,90,.72);border:1px solid rgba(255,255,255,.08);box-shadow:0 6px 18px rgba(10,5,25,.25)}
+.stage{border-radius:24px;box-shadow:0 0 0 1px rgba(255,255,255,.08),0 18px 40px rgba(10,5,25,.45);min-height:0}
+.modal-wrap{-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+.card{box-shadow:0 20px 60px rgba(10,5,25,.5)}
+.big{box-shadow:0 4px 0 rgba(0,0,0,.22);transition:transform .12s,box-shadow .12s}
+.big:not([disabled]):active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.22)}
+@media (max-height:720px),(max-width:420px){ .card{padding:16px 16px 14px;border-radius:22px} .card h2{font-size:28px} .card p,.card ul{font-size:14px} .card ul{line-height:1.4;margin-bottom:8px} .big{padding:12px;font-size:16px;margin-top:8px} .stats b{font-size:22px} }
+.pill.boost{background:#FFC93C;color:#241A3D;border-color:#FFC93C}
+.pill.boost small{color:#241A3D}
+#startBtn{position:sticky;bottom:0;z-index:2;box-shadow:0 4px 0 rgba(0,0,0,.22),0 -14px 14px 2px #FFF2E2}
+@media (max-height:480px){ .app{gap:6px;padding-block:6px} .brand h1{font-size:20px} .card h2{font-size:24px} .pill{padding:3px 9px} }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand"><a class="back" href="index.html" aria-label="Nazad u Avduljevu sobu"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>Soba</a><h1>Avdulj i Dragan</h1></div>
+    <div class="pills">
+      <span class="pill"><small>💩</small><b id="apples">0</b></span>
+      <span class="pill"><small>put</small><b id="dist">0</b>&nbsp;m</span>
+      <span class="pill"><small>potkovice</small><b id="lives">3</b></span>
+      <span class="pill boost" id="boostPill" hidden><small>⚡</small><b>2X</b></span>
+      <button class="icon-btn" id="soundBtn" aria-label="Zvuk"></button>
+    </div>
+  </header>
+  <main class="stage" id="stage">
+    <canvas id="cv" aria-label="Avdulj jaše konja Dragana kroz Novi Pazar, Beograd i Novi Sad"></canvas>
+    <div class="toast" id="toast"></div>
+  </main>
+</div>
+
+<div class="modal-wrap" id="intro">
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="iTitle">
+    <div class="eyebrow">Jahanje</div>
+    <h2 id="iTitle">Avdulj jaše Dragana</h2>
+    <p>Dragan je brz konj, ali tvrdoglav. Avdulj ga jaše od Novog Pazara, preko Beograda, do Novog Sada.</p>
+    <ul>
+      <li>Skoči preko ograda, bala sijena, kamenja i potoka: <kbd>razmak</kbd>, <kbd>↑</kbd> ili dodir ekrana.</li>
+      <li>Skupljaj kakice 💩. Šargarepa daje Draganu turbo.</li>
+      <li>Na samom početku Oskar ti nudi ponudu. Biraj pametno.</li>
+      <li>Čobanin Oskar tjera ovce preko puta. Preskoči sve ovce i Oskar ti daje 5 kakica.</li>
+      <li>Kad Dragan stane i neće dalje, pomazi ga: tapkaj ga pet puta.</li>
+      <li>Imaš tri potkovice. Svaki udarac košta jednu.</li>
+    </ul>
+    <label class="namefield">Ime igrača za rang listu<input id="pname" maxlength="16" autocomplete="nickname" placeholder="npr. Semin"></label>
+    <p id="petStatus"></p>
+    <button class="big" id="startBtn">Jaši!</button>
+    <a class="big alt" href="index.html">Nazad u Avduljevu sobu</a>
+  </div>
+</div>
+<div class="modal-wrap" id="endM" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="eTitle">
+    <div class="eyebrow">Kraj jahanja</div>
+    <h2 id="eTitle">Bravo, Avdulje!</h2>
+    <div class="stats">
+      <div><b id="eApples">0</b><small>kakica</small></div>
+      <div><b id="eDist">0</b><small>metara</small></div>
+      <div><b id="eBest">0</b><small>rekord m</small></div>
+    </div>
+    <p id="eLine"></p>
+    <div class="lbw" id="eLb"></div>
+    <a class="big" href="index.html">Nazad u Avduljevu sobu</a>
+    <button class="big alt" id="againBtn">Jaši ponovo</button>
+  </div>
+</div>
+
+<div class="modal-wrap" id="offerM" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="oTitle">
+    <div class="eyebrow">Čobanin Oskar</div>
+    <h2 id="oTitle">Oskar nudi 5000 dinara</h2>
+    <p>„Psst, Avdulje! Evo ti 5000 dinara. Uzmi i NE PRICAJ NISTA.“</p>
+    <p>Šta radiš?</p>
+    <button class="big" id="takeBtn">💵 Uzmi 5000 dinara</button>
+    <button class="big alt" id="poopBtn">💩 Gađaj Oskara kakicom</button>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const cv = $('#cv'), ctx = cv.getContext('2d'), stage = $('#stage');
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const rnd = (a, b) => a + Math.random() * (b - a);
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- Veza sa Avduljevom sobom ---------- */
+const PKEY = 'dzudzo-v1';
+const loadPet = () => { try { return JSON.parse(localStorage.getItem(PKEY)); } catch (e) { return null; } };
+const savePet = p => { try { localStorage.setItem(PKEY, JSON.stringify(p)); } catch (e) {} };
+function petCheck() {
+  const p = loadPet(), el = $('#petStatus');
+  let ok = true, msg = 'Avdulj je spreman za jahanje.';
+  if (p && p.sleeping) { ok = false; msg = 'Avdulj spava. Probudi ga u sobi.'; }
+  else if (p && p.energija < 15) { ok = false; msg = `Avdulj je preumoran za jahanje (energija ${Math.round(p.energija)}). Pusti ga da odspava.`; }
+  else if (p) msg = `Energija ${Math.round(p.energija)} · sitost ${Math.round(p.glad)}.`;
+  el.textContent = msg; el.classList.toggle('bad', !ok);
+  $('#startBtn').disabled = !ok; $('#againBtn').disabled = !ok; $('#againBtn').textContent = ok ? 'Jaši ponovo' : 'Avdulj mora odmoriti';
+  return ok;
+}
+function payPet(apples, meters) {
+  const p = loadPet() || { coins: 20, glad: 75, sreca: 80, energija: 85, cistoca: 70, xp: 0, lvl: 1 };
+  p.coins = (p.coins || 0) + apples;
+  p.energija = Math.max(0, (p.energija ?? 85) - 12);
+  p.glad = Math.max(0, (p.glad ?? 75) - 10);
+  p.cistoca = Math.max(0, (p.cistoca ?? 70) - 10);
+  p.sreca = Math.min(100, (p.sreca ?? 80) + 8 + Math.min(12, Math.round(meters / 150)));
+  p.xp = (p.xp || 0) + apples * 2 + Math.round(meters / 40);
+  p.lastRide = { apples, meters, ts: Date.now(), seen: false };
+  p.last = Date.now();
+  savePet(p);
+  return p;
+}
+
+/* ---------- Zvuk ---------- */
+let soundOn = true; try { soundOn = localStorage.getItem('dz-konj-sound') !== '0'; } catch (e) {}
+let AC = null;
+const ac = () => { if (AC === null) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { AC = false; } } return AC || null; };
+function tone(f, d = 0.12, type = 'sine', vol = 0.1, slide = 0, delay = 0) {
+  if (!soundOn) return; const a = ac(); if (!a) return;
+  try { const t0 = a.currentTime + delay, o = a.createOscillator(), g = a.createGain(); o.type = type; o.frequency.setValueAtTime(f, t0); if (slide) o.frequency.exponentialRampToValueAtTime(f * slide, t0 + d); g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0008, t0 + d); o.connect(g).connect(a.destination); o.start(t0); o.stop(t0 + d + 0.03); } catch (e) {}
+}
+function neigh(len = 0.9) {
+  if (!soundOn) return; const a = ac(); if (!a) return;
+  try {
+    const t0 = a.currentTime, o = a.createOscillator(), g = a.createGain(), lfo = a.createOscillator(), lg = a.createGain(), f = a.createBiquadFilter();
+    o.type = 'sawtooth'; o.frequency.setValueAtTime(820, t0); o.frequency.exponentialRampToValueAtTime(380, t0 + len);
+    lfo.frequency.value = 13; lg.gain.value = 70; lfo.connect(lg).connect(o.frequency);
+    f.type = 'bandpass'; f.frequency.value = 1100; f.Q.value = 1.4;
+    g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.09, t0 + 0.05); g.gain.exponentialRampToValueAtTime(0.0008, t0 + len);
+    o.connect(f).connect(g).connect(a.destination); o.start(t0); lfo.start(t0); o.stop(t0 + len + 0.05); lfo.stop(t0 + len + 0.05);
+  } catch (e) {}
+}
+function baa(len = 0.55) {
+  if (!soundOn) return; const a = ac(); if (!a) return;
+  try {
+    const t0 = a.currentTime, o = a.createOscillator(), g = a.createGain(), lfo = a.createOscillator(), lg = a.createGain(), f = a.createBiquadFilter();
+    o.type = 'sawtooth'; o.frequency.setValueAtTime(rnd(360, 420), t0); o.frequency.exponentialRampToValueAtTime(300, t0 + len);
+    lfo.frequency.value = 7; lg.gain.value = 28; lfo.connect(lg).connect(o.frequency);
+    f.type = 'bandpass'; f.frequency.value = 950; f.Q.value = 1.2;
+    g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.07, t0 + 0.06); g.gain.exponentialRampToValueAtTime(0.0008, t0 + len);
+    o.connect(f).connect(g).connect(a.destination); o.start(t0); lfo.start(t0); o.stop(t0 + len + 0.05); lfo.stop(t0 + len + 0.05);
+  } catch (e) {}
+}
+const SFX = {
+  hoof: () => tone(rnd(520, 640), 0.04, 'square', 0.025, 0.6),
+  jump: () => tone(300, 0.2, 'triangle', 0.08, 2),
+  apple: () => { tone(988, 0.07, 'triangle', 0.08); tone(1480, 0.1, 'triangle', 0.07, 0, 0.06); },
+  hit: () => tone(110, 0.3, 'sawtooth', 0.09, 0.5),
+  splash: () => tone(900, 0.25, 'sine', 0.07, 0.3),
+  pet: () => tone(rnd(420, 520), 0.15, 'sine', 0.1, 1.5),
+  carrot: () => [523, 659, 784, 1046].forEach((f, i) => tone(f, 0.12, 'triangle', 0.08, 0, i * 0.07)),
+  boing: () => { tone(180, 0.35, 'sine', 0.1, 3.2); tone(540, 0.25, 'sine', 0.05, 0.4, 0.12); },
+  whistle: () => { tone(1700, 0.14, 'sine', 0.06, 1.25); tone(2100, 0.22, 'sine', 0.06, 0.7, 0.18); },
+  dance: () => [784, 988, 784, 1175, 988, 1318].forEach((f, i) => tone(f, 0.1, 'square', 0.035, 0, i * 0.09)),
+  brr: () => {
+    if (!soundOn) return; const a = ac(); if (!a) return;
+    try { const t0 = a.currentTime, o = a.createOscillator(), g = a.createGain(), lfo = a.createOscillator(), lg = a.createGain(); o.type = 'sawtooth'; o.frequency.value = 95; lfo.frequency.value = 26; lg.gain.value = 0.05; g.gain.value = 0.05; lfo.connect(lg).connect(g.gain); o.connect(g).connect(a.destination); g.gain.setValueAtTime(0.05, t0); g.gain.linearRampToValueAtTime(0.0001, t0 + 0.45); o.start(t0 + 0.05); lfo.start(t0); o.stop(t0 + 0.5); lfo.stop(t0 + 0.5); } catch (e) {}
+  },
+};
+function renderSoundBtn() {
+  $('#soundBtn').innerHTML = soundOn
+    ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>'
+    : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M17 9l5 6M22 9l-5 6"/></svg>';
+  $('#soundBtn').setAttribute('aria-label', soundOn ? 'Isključi zvuk' : 'Uključi zvuk');
+}
+$('#soundBtn').addEventListener('click', () => { soundOn = !soundOn; try { localStorage.setItem('dz-konj-sound', soundOn ? '1' : '0'); } catch (e) {} renderSoundBtn(); });
+renderSoundBtn();
+
+/* ---------- Canvas: logička visina 400 ---------- */
+let W = 300, H = 300, DPR = 1, K = 1, LW = 600, OY = 0;
+const LH = 400, GROUND = 330;
+function resize() { const r = stage.getBoundingClientRect(); DPR = Math.min(2, devicePixelRatio || 1); W = Math.max(1, r.width); H = Math.max(1, r.height); cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR); K = Math.min(H / LH, W / 460); LW = W / K; OY = (H - LH * K) * 0.62; }
+new ResizeObserver(resize).observe(stage); resize();
+
+/* ---------- Stanje ---------- */
+const S = { running: false, t: 0, dist: 0, speed: 0, apples: 0, lives: 3, inv: 0, turbo: 0, stubborn: null, nextStubborn: 22, ended: false, oskar: null, nextOskar: 12, city: 0, offer: 0, boost: 1, poopT: 0 };
+const horse = { y: GROUND, vy: 0, ground: true, phase: 0, stepAcc: 0, hurt: 0 };
+let obs = [], items = [], parts = [], signs = [], nextObs = 500, nextItem = 250, clouds = [], scroll = 0;
+const CITIES = ['Novi Pazar', 'Beograd', 'Novi Sad'], CITY_W = 1000, BG_PAR = 0.25;
+const cityAt = () => { const i = Math.floor((scroll * BG_PAR + LW * 0.5) / CITY_W); return ((i % 3) + 3) % 3; };
+const HX = () => Math.min(LW * 0.3, 260);
+for (let i = 0; i < 6; i++) clouds.push({ x: rnd(0, 1400), y: rnd(30, 140), s: rnd(0.7, 1.4) });
+let toastT = 0;
+function toast(msg, ms = 1800) { const t = $('#toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), ms); }
+
+/* ---------- Unos ---------- */
+function press() {
+  ac();
+  if (!S.running || S.offer === 1) return;
+  if (S.stubborn) { petDragan(); return; }
+  if (horse.ground) { horse.vy = -640; horse.ground = false; SFX.jump(); }
+}
+function release() { if (!horse.ground && horse.vy < -260) horse.vy = -260; }
+addEventListener('keydown', e => { if ([' ', 'ArrowUp', 'w', 'W'].includes(e.key) && S.running) { e.preventDefault(); if (!e.repeat) press(); } });
+addEventListener('keyup', e => { if ([' ', 'ArrowUp', 'w', 'W'].includes(e.key)) release(); });
+cv.addEventListener('pointerdown', e => { e.preventDefault(); press(); });
+cv.addEventListener('pointerup', release);
+
+/* ---------- Tvrdoglavi Dragan ---------- */
+const STUB_LINES = ['Dragan neće dalje!', 'Dragan je stao. Hoće maženje.', 'Dragan se nadurio...', 'Dragan kaže: ne mogu bez maženja!'];
+function petDragan() {
+  const st = S.stubborn; st.pets++; SFX.pet();
+  for (let i = 0; i < 3; i++) parts.push({ type: 'heart', x: HX() + rnd(10, 60), y: horse.y - rnd(110, 140), vx: rnd(-30, 30), vy: rnd(-80, -40), life: 1, max: 1 });
+  if (st.pets >= 5) { S.stubborn = null; S.nextStubborn = rnd(20, 32); neigh(0.7); toast('Dragan: Ajde, idemo!', 1400); }
+  else toast(`Mazi Dragana: ${st.pets}/5`, 900);
+}
+
+/* ---------- Generisanje ---------- */
+const OBS = [
+  { type: 'ograda', w: 46, h: 56 },
+  { type: 'sijeno', w: 62, h: 44 },
+  { type: 'kamen', w: 42, h: 28 },
+  { type: 'potok', w: 0, h: 0 },
+];
+function spawnObstacle(x) {
+  const o = Object.assign({}, pick(OBS)); o.x = x;
+  if (o.type === 'potok') o.w = rnd(80, 130);
+  obs.push(o);
+  // jabuke u luku iznad prepreke
+  if (Math.random() < 0.6) for (let i = 0; i < 4; i++) items.push({ type: 'jabuka', x: x + o.w / 2 - 75 + i * 50, y: GROUND - 95 - Math.sin((i + 0.5) / 4 * Math.PI) * 55 });
+}
+function spawnItems(x) {
+  if (Math.random() < 0.08) { items.push({ type: 'sargarepa', x, y: GROUND - rnd(40, 130) }); return; }
+  const n = 3 + Math.floor(Math.random() * 3), h = Math.random() < 0.5 ? 30 : rnd(70, 130);
+  for (let i = 0; i < n; i++) items.push({ type: 'jabuka', x: x + i * 34, y: GROUND - h });
+}
+/* ---------- Čobanin Oskar i njegove ovce ---------- */
+const OSKAR_LINES = ['Oskar: Hej, Avdulje! Pazi mi ovce!', 'Oskar: Dragane, ne gazi mi Milku!', 'Oskar: Preskoči ovce, dobićeš kakice!', 'Oskar: Ajmo, ovčice, brže preko puta!', 'Oskar: Opet mi ovce pobjegle na put!', 'Oskar: Dragane, skini te naočare, ne vidiš ništa!', 'Oskar: Bela, Šarka, Milka, vamo!'];
+const SHEEP_NAMES = ['Milka', 'Bela', 'Šarka', 'Cica', 'Bubica', 'Zekuša'];
+function spawnOskar() {
+  const n = Math.random() < 0.5 ? 2 : 3, flock = [], names = SHEEP_NAMES.slice().sort(() => Math.random() - 0.5);
+  let x = LW + 320;
+  SFX.whistle();
+  for (let i = 0; i < n; i++) {
+    const o = { type: 'ovca', w: 50, h: 38, x, ph: rnd(0, 6), name: names[i] };
+    obs.push(o); flock.push(o);
+    for (let j = 0; j < 3; j++) items.push({ type: 'jabuka', x: x + o.w / 2 - 50 + j * 50, y: GROUND - 90 - Math.sin((j + 0.5) / 3 * Math.PI) * 40 });
+    x += rnd(380, 460) + S.speed * 0.4;
+  }
+  S.oskar = { x: LW + 70, say: pick(OSKAR_LINES), flock, hitSheep: false, done: false };
+  nextObs = Math.max(nextObs, x - LW + rnd(200, 360));
+  baa();
+}
+function checkOskar(hx) {
+  const k = S.oskar; if (!k) return;
+  if (!k.done && k.flock.every(s => s.x + s.w < hx - 40)) {
+    k.done = true;
+    if (!k.hitSheep) { S.apples += 5; SFX.carrot(); SFX.dance(); k.say = k.pooped ? 'Oskar: Evo ti 5 kakica, samo me više ne gađaj!' : pick(['Oskar: Svaka čast! Igram od sreće!', 'Oskar: Bravo! Evo ti 5 kakica!', 'Oskar: Ovakvog jahača nisam vidio!']); toast('Oskar ti daje 5 kakica! 💩', 1500); parts.push({ type: 'text', txt: '+5', x: hx + 20, y: horse.y - 150, vx: 0, vy: -50, life: 1, max: 1 }); }
+    else k.say = pick(['Oskar: Ništa, drugi put!', 'Oskar: Joj, joj, moje ovčice...', 'Oskar: Dragane, kupi bolje naočare!']);
+  }
+  if (k.done && k.x < -120) { S.oskar = null; S.nextOskar = rnd(24, 36); }
+}
+
+/* ---------- Ažuriranje ---------- */
+function hit(msg) {
+  if (S.inv > 0 || S.turbo > 0) return;
+  S.lives--; S.inv = 1.6; horse.hurt = 0.8; SFX.hit(); SFX.boing(); SFX.brr(); toast(msg, 1200);
+  if (S.lives <= 0) endRide();
+}
+function update(dt) {
+  if (!S.running) { horse.phase += dt * 3; return; }
+  if (S.offer === 1) { horse.phase += dt * 2; S.t += dt; stepParts(dt); if (S.poopT > 0) { S.poopT -= dt; if (S.poopT <= 0) poopHit(); } return; }
+  S.t += dt; S.inv = Math.max(0, S.inv - dt); S.turbo = Math.max(0, S.turbo - dt); horse.hurt = Math.max(0, horse.hurt - dt);
+  // tvrdoglavost
+  if (!S.stubborn) { S.nextStubborn -= dt; if (S.nextStubborn <= 0 && horse.ground && S.turbo <= 0 && !S.oskar) { S.stubborn = { pets: 0 }; toast(pick(STUB_LINES) + ' Tapkaj ga pet puta.', 2400); neigh(0.6); } }
+  const target = S.stubborn ? 0 : (300 + Math.min(260, S.t * 5)) * (S.turbo > 0 ? 1.45 : 1) * S.boost;
+  S.speed += (target - S.speed) * Math.min(1, dt * (S.stubborn ? 4 : 2));
+  const dx = S.speed * dt; S.dist += dx; scroll += dx;
+  // skok
+  if (!horse.ground) { horse.vy += 1750 * dt; horse.y += horse.vy * dt; if (horse.y >= GROUND) { horse.y = GROUND; horse.vy = 0; horse.ground = true; SFX.hoof(); } }
+  // galop
+  horse.phase += dt * (S.speed / 300) * 9;
+  if (horse.ground && S.speed > 40) { horse.stepAcc += dt * S.speed / 300 * 4; if (horse.stepAcc > 1) { horse.stepAcc = 0; SFX.hoof(); if (Math.random() < 0.4) parts.push({ type: 'dust', x: HX() - 40, y: GROUND - 4, vx: -60, vy: -20, life: 0.5, max: 0.5 }); } }
+  // prepreke i predmeti
+  for (const o of obs) o.x -= dx; for (const it of items) it.x -= dx; for (const s of signs) s.x -= dx;
+  if (S.oskar) S.oskar.x -= dx;
+  else if (!S.stubborn) { S.nextOskar -= dt; if (S.nextOskar <= 0) spawnOskar(); }
+  if (S.oskar && S.offer === 0 && S.oskar.x < LW * 0.72) openOffer();
+  // gradovi u pozadini
+  const c = cityAt(); if (c !== S.city) { S.city = c; signs.push({ x: LW + 40, name: CITIES[c] }); toast(`Dobro došli u ${c === 0 ? 'Novi Pazar' : c === 1 ? 'Beograd' : 'Novi Sad'}!`, 1600); }
+  signs = signs.filter(s => s.x > -120);
+  nextObs -= dx; if (nextObs <= 0) { spawnObstacle(LW + 60); nextObs = rnd(330, 620) + S.speed * 0.4; }
+  nextItem -= dx; if (nextItem <= 0) { spawnItems(LW + 40); nextItem = rnd(260, 520); }
+  const hx = HX();
+  for (const o of obs) {
+    if (o.done) continue;
+    if (o.type === 'potok') {
+      if (horse.ground && hx + 18 > o.x + 10 && hx - 18 < o.x + o.w - 10) { o.done = true; for (let i = 0; i < 12; i++) parts.push({ type: 'drop', x: hx + rnd(-20, 20), y: GROUND, vx: rnd(-90, 90), vy: rnd(-260, -120), g: 900, life: 0.8, max: 0.8 }); SFX.splash(); hit('Pljus! Dragan je upao u potok.'); }
+    } else {
+      const top = GROUND - o.h + 6;
+      if (hx + 42 > o.x + 6 && hx - 36 < o.x + o.w - 6 && horse.y > top) {
+        o.done = true;
+        if (o.type === 'ovca') { o.scared = 1; baa(0.4); if (S.oskar) { S.oskar.hitSheep = true; S.oskar.say = `Oskar: Joj, moja ${o.name}!`; S.oskar.shock = 1; } hit('Beeee!'); }
+        else hit(o.type === 'ograda' ? 'Bum! Ograda!' : o.type === 'sijeno' ? 'Uh, pravo u sijeno!' : 'Au, kamen!');
+      }
+    }
+  }
+  checkOskar(hx);
+  for (const it of items) {
+    if (it.got) continue;
+    if (it.x > hx - 50 && it.x < hx + 62 && it.y > horse.y - 150 && it.y < horse.y + 4) {
+      it.got = true;
+      if (it.type === 'jabuka') { S.apples++; SFX.apple(); parts.push({ type: 'text', txt: '+1', x: it.x, y: it.y, vx: 0, vy: -60, life: 0.7, max: 0.7 }); }
+      else { S.turbo = 4; SFX.carrot(); neigh(0.5); toast('Šargarepa! Dragan leti 4 sekunde.', 1600); }
+    }
+  }
+  obs = obs.filter(o => o.x + o.w > -80); items = items.filter(i => !i.got && i.x > -40);
+  stepParts(dt);
+  hudTick += dt; if (hudTick > 0.15) { hudTick = 0; renderHud(); }
+}
+let hudTick = 0;
+function stepParts(dt) {
+  for (const p of parts) { p.life -= dt; p.x += (p.vx || 0) * dt; p.y += (p.vy || 0) * dt; if (p.g) p.vy += p.g * dt; if (p.spin) p.rot = (p.rot || 0) + p.spin * dt; }
+  parts = parts.filter(p => p.life > 0);
+}
+
+/* ---------- Oskarova ponuda na početku: 5000 dinara ili kakica ---------- */
+function openOffer() {
+  S.offer = 1; SFX.whistle();
+  S.oskar.say = 'Oskar: Psst, Avdulje! Imam ponudu za tebe.';
+  $('#offerM').hidden = false; setTimeout(() => $('#poopBtn').focus(), 60);
+}
+function takeMoney() {
+  if (S.offer !== 1 || S.poopT > 0) return;
+  $('#offerM').hidden = true; S.offer = 2; S.inv = 1.5;
+  if (S.oskar) S.oskar.say = pick(['Oskar: Evo ti, samo ćuti!', 'Oskar: Pametan momak!', 'Oskar: Naš si sad, Avdulje!']);
+  SFX.apple(); neigh(0.4);
+  parts.push({ type: 'text', txt: '+5000 din', x: HX() + 20, y: horse.y - 160, vx: 0, vy: -40, life: 1.4, max: 1.4 });
+  toast('Uzeo si 5000 dinara. Dragan te gleda razočarano.', 2000);
+}
+function throwPoop() {
+  if (S.offer !== 1 || S.poopT > 0) return;
+  $('#offerM').hidden = true;
+  const k = S.oskar, x0 = HX() + 30, y0 = horse.y - 140, x1 = k.x - 2, y1 = GROUND - 2 - 160, T = 0.65, g = 900;
+  parts.push({ type: 'poop', x: x0, y: y0, vx: (x1 - x0) / T, vy: (y1 - y0 - 0.5 * g * T * T) / T, g, spin: 9, life: T, max: T });
+  S.poopT = T; SFX.jump();
+}
+function poopHit() {
+  const k = S.oskar; S.offer = 2; S.boost = 2; S.inv = 1.5; $('#boostPill').hidden = false;
+  if (k) {
+    k.pooped = true; k.shock = 1; k.say = pick(['Oskar: FUJ! BLJAK!', 'Oskar: Moj šešir! Ovo nije bilo u dogovoru!', 'Oskar: Joj, kakica na šeširu!']);
+    for (let i = 0; i < 10; i++) parts.push({ type: 'mud', x: k.x, y: GROUND - 162, vx: rnd(-140, 140), vy: rnd(-220, -60), g: 800, life: 0.7, max: 0.7 });
+  }
+  SFX.hit(); SFX.carrot(); neigh(0.8);
+  toast('💩 Pogodak! Dragan sada juri 2X brzinom!', 2200);
+}
+$('#takeBtn').addEventListener('click', takeMoney);
+$('#poopBtn').addEventListener('click', throwPoop);
+function renderHud() { $('#apples').textContent = S.apples; $('#dist').textContent = Math.floor(S.dist / 10); $('#lives').textContent = '●'.repeat(Math.max(0, S.lives)) + '○'.repeat(3 - Math.max(0, S.lives)); }
+
+/* ---------- Crtanje: pozadina ---------- */
+function hills(off, base, amp, col, seed, step) {
+  ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(0, LH);
+  for (let x = 0; x <= LW + step; x += step) { const wx = x + off; const y = base - amp * (0.55 * Math.sin(wx * 0.004 + seed) + 0.3 * Math.sin(wx * 0.011 + seed * 2) + 0.15 * Math.sin(wx * 0.023)); ctx.lineTo(x, y); }
+  ctx.lineTo(LW, LH); ctx.closePath(); ctx.fill();
+}
+function drawBg() {
+  let g = ctx.createLinearGradient(0, 0, 0, GROUND); g.addColorStop(0, '#7CC6EE'); g.addColorStop(1, '#D8F0FA');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, LW, LH);
+  ctx.fillStyle = '#FFE38A'; ctx.beginPath(); ctx.arc(LW - 90, 70, 34, 0, 7); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,.9)';
+  for (const c of clouds) { const x = ((c.x - scroll * 0.08) % (LW + 300) + LW + 300) % (LW + 300) - 150; ctx.beginPath(); ctx.arc(x, c.y, 18 * c.s, 0, 7); ctx.arc(x + 20 * c.s, c.y - 8 * c.s, 22 * c.s, 0, 7); ctx.arc(x + 42 * c.s, c.y, 17 * c.s, 0, 7); ctx.fill(); }
+  hills(scroll * 0.15, 220, 50, '#8BB6A0', 1.3, 12);
+  // gradovi u pozadini: Novi Pazar, Beograd, Novi Sad (ponavljaju se u krug)
+  const off = scroll * BG_PAR;
+  const k0 = Math.floor(off / CITY_W) - 1;
+  for (let k = k0; k < k0 + Math.ceil(LW / CITY_W) + 3; k++) {
+    const bx = k * CITY_W - off, idx = ((k % 3) + 3) % 3;
+    if (bx > LW + 120 || bx + CITY_W < -120) continue;
+    // brdo na kom grad stoji, da zgrade ne lebde iznad dolina
+    ctx.fillStyle = '#8BB6A0'; ctx.beginPath(); ctx.moveTo(bx - 90, 340); ctx.quadraticCurveTo(bx - 10, CB + 2, bx + 30, CB); ctx.lineTo(bx + 950, CB); ctx.quadraticCurveTo(bx + 1010, CB + 2, bx + 1090, 340); ctx.fill();
+    (idx === 0 ? cityPazar : idx === 1 ? cityBeograd : cityNoviSad)(bx);
+  }
+  hills(scroll * 0.4, 268, 34, '#6FAE6B', 4.1, 10);
+  hills(scroll * 0.6, 300, 18, '#5C9C58', 7.7, 10);
+  // tlo
+  g = ctx.createLinearGradient(0, GROUND, 0, LH); g.addColorStop(0, '#7BC36A'); g.addColorStop(1, '#4F8F45');
+  ctx.fillStyle = g; ctx.fillRect(0, GROUND, LW, LH - GROUND);
+  ctx.fillStyle = '#C9A774'; ctx.fillRect(0, GROUND + 6, LW, 16);
+  ctx.fillStyle = 'rgba(120,85,50,.35)'; for (let x = -((scroll) % 40); x < LW; x += 40) ctx.fillRect(x, GROUND + 12, 14, 3);
+  ctx.fillStyle = '#5E9E4F'; for (let x = -((scroll) % 23); x < LW; x += 23) { ctx.beginPath(); ctx.moveTo(x, GROUND + 2); ctx.lineTo(x + 3, GROUND - 6); ctx.lineTo(x + 6, GROUND + 2); ctx.fill(); }
+}
+/* ---------- Gradovi ---------- */
+const CB = 236; // linija na kojoj stoje zgrade
+function box(x, y, w, h, c) { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); }
+function wins(x, y, w, h, c = 'rgba(90,110,140,.35)') { ctx.fillStyle = c; for (let yy = y + 5; yy < y + h - 4; yy += 8) for (let xx = x + 4; xx < x + w - 4; xx += 7) ctx.fillRect(xx, yy, 3, 4); }
+function roofHouse(x, w, h, wall = '#F1E7D8', roof = '#C96A4D') { box(x, CB - h, w, h, wall); ctx.fillStyle = roof; ctx.beginPath(); ctx.moveTo(x - 2, CB - h); ctx.lineTo(x + w / 2, CB - h - 8); ctx.lineTo(x + w + 2, CB - h); ctx.fill(); }
+function minaret(x, h) { ctx.fillStyle = '#F4EFE6'; ctx.fillRect(x, CB - h, 6, h); ctx.beginPath(); ctx.moveTo(x - 2, CB - h); ctx.lineTo(x + 3, CB - h - 16); ctx.lineTo(x + 8, CB - h); ctx.fill(); ctx.fillRect(x - 1, CB - h + 24, 8, 3); }
+function dome(x, y, r, c) { ctx.fillStyle = c; ctx.beginPath(); ctx.arc(x, y, r, Math.PI, 0); ctx.fill(); }
+function cross(x, y, c = '#E6B93C') { box(x - 1, y - 10, 2, 10, c); box(x - 4, y - 7, 8, 2, c); }
+
+function cityPazar(bx) {
+  // kuće s crvenim krovovima, Altun-alem džamija s munarom
+  [[60, 18], [90, 14], [118, 20], [150, 16], [182, 22], [230, 15], [258, 19]].forEach(([x, w], i) => roofHouse(bx + x, w, 14 + (i * 7) % 12));
+  minaret(bx + 210, 64); dome(bx + 190, CB, 16, '#B9C6BF');
+  // hotel Vrbak: stakleni stepenasti krov
+  box(bx + 360, CB - 24, 130, 24, '#E6DCCB'); wins(bx + 360, CB - 24, 130, 24);
+  ctx.fillStyle = '#9EC3D4'; for (let i = 0; i < 4; i++) { const w = 110 - i * 26, y = CB - 24 - i * 11; ctx.beginPath(); ctx.moveTo(bx + 425 - w / 2, y); ctx.lineTo(bx + 425 - w / 2 + 6, y - 11); ctx.lineTo(bx + 425 + w / 2 - 6, y - 11); ctx.lineTo(bx + 425 + w / 2, y); ctx.fill(); }
+  ctx.fillStyle = 'rgba(255,255,255,.4)'; ctx.fillRect(bx + 395, CB - 33, 18, 2);
+  // Petrova crkva: mala kamena crkva s kupolom
+  box(bx + 590, CB - 22, 42, 22, '#CDBA9A'); dome(bx + 632, CB - 4, 12, '#CDBA9A'); box(bx + 603, CB - 32, 16, 10, '#C3AE8C'); dome(bx + 611, CB - 32, 9, '#A88F6A'); cross(bx + 611, CB - 41);
+  // još kuća i druga munara
+  [[680, 20], [706, 16], [728, 22], [800, 18], [824, 15], [846, 21], [880, 17]].forEach(([x, w], i) => roofHouse(bx + x, w, 13 + (i * 5) % 11));
+  minaret(bx + 770, 56); dome(bx + 760, CB, 13, '#B9C6BF');
+}
+function cityBeograd(bx) {
+  // Kalemegdan: zidine i Pobjednik
+  box(bx + 50, CB - 24, 200, 24, '#CDB894'); ctx.fillStyle = '#CDB894'; for (let x = 50; x < 250; x += 14) ctx.fillRect(bx + x, CB - 30, 8, 6);
+  ctx.fillStyle = '#9C8866'; ctx.beginPath(); ctx.arc(bx + 120, CB, 9, Math.PI, 0); ctx.fill();
+  box(bx + 228, CB - 100, 5, 76, '#E3DCCD'); box(bx + 225, CB - 102, 11, 4, '#D3CBBB');
+  box(bx + 229, CB - 116, 4, 14, '#6E8B7E'); ctx.fillStyle = '#6E8B7E'; ctx.beginPath(); ctx.arc(bx + 231, CB - 119, 3, 0, 7); ctx.fill(); ctx.fillRect(bx + 226, CB - 112, 3, 6);
+  // Hram Svetog Save
+  box(bx + 300, CB - 44, 84, 44, '#F3EEE6'); box(bx + 288, CB - 28, 108, 28, '#ECE5DA');
+  box(bx + 325, CB - 58, 34, 14, '#F3EEE6'); dome(bx + 342, CB - 58, 22, '#6FAE93'); cross(bx + 342, CB - 80);
+  [[304, 0], [380, 0]].forEach(([x]) => { dome(bx + x, CB - 44, 7, '#6FAE93'); cross(bx + x, CB - 51); });
+  ctx.fillStyle = 'rgba(120,110,95,.25)'; for (let i = 0; i < 5; i++) ctx.fillRect(bx + 308 + i * 15, CB - 38, 4, 12);
+  // stambeni blokovi
+  [[440, 34, 48], [480, 28, 64], [514, 36, 40]].forEach(([x, w, h]) => { box(bx + x, CB - h, w, h, '#E1D9CB'); wins(bx + x, CB - h, w, h); });
+  // Zapadna kapija (Geneks kula)
+  box(bx + 590, CB - 122, 22, 122, '#B5ADA4'); box(bx + 630, CB - 102, 22, 102, '#B5ADA4'); box(bx + 612, CB - 106, 18, 9, '#A39B92');
+  wins(bx + 590, CB - 122, 22, 122, 'rgba(60,60,70,.3)'); wins(bx + 630, CB - 102, 22, 102, 'rgba(60,60,70,.3)');
+  ctx.fillStyle = '#9F978E'; ctx.beginPath(); ctx.arc(bx + 601, CB - 128, 10, 0, 7); ctx.fill(); box(bx + 600, CB - 146, 2, 10, '#9F978E');
+  // Kula Beograd: zakrivljeni stakleni toranj
+  ctx.fillStyle = '#9CC0D6'; ctx.beginPath(); ctx.moveTo(bx + 740, CB); ctx.bezierCurveTo(bx + 738, CB - 50, bx + 752, CB - 90, bx + 748, CB - 136); ctx.lineTo(bx + 766, CB - 136); ctx.bezierCurveTo(bx + 772, CB - 90, bx + 776, CB - 50, bx + 774, CB); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(bx + 750, CB - 6); ctx.bezierCurveTo(bx + 748, CB - 50, bx + 758, CB - 90, bx + 754, CB - 130); ctx.stroke();
+  [[800, 30, 52], [836, 26, 38], [866, 34, 58]].forEach(([x, w, h]) => { box(bx + x, CB - h, w, h, '#E1D9CB'); wins(bx + x, CB - h, w, h); });
+}
+function cityNoviSad(bx) {
+  // Petrovaradinska tvrđava sa satom (velika kazaljka pokazuje sate)
+  ctx.fillStyle = '#C8B48E'; ctx.beginPath(); ctx.moveTo(bx + 40, CB); ctx.lineTo(bx + 60, CB - 30); ctx.lineTo(bx + 140, CB - 30); ctx.lineTo(bx + 150, CB - 48); ctx.lineTo(bx + 300, CB - 48); ctx.lineTo(bx + 320, CB); ctx.fill();
+  ctx.fillStyle = '#B8A47E'; for (let x = 70; x < 300; x += 26) ctx.fillRect(bx + x, x < 145 ? CB - 22 : CB - 40, 10, 6);
+  box(bx + 222, CB - 76, 18, 28, '#EFE6D5'); ctx.fillStyle = '#6F8E7C'; ctx.beginPath(); ctx.moveTo(bx + 219, CB - 76); ctx.lineTo(bx + 231, CB - 96); ctx.lineTo(bx + 243, CB - 76); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(bx + 231, CB - 64, 6, 0, 7); ctx.fill();
+  ctx.strokeStyle = '#2A1F25'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(bx + 231, CB - 64); ctx.lineTo(bx + 231, CB - 69); ctx.moveTo(bx + 231, CB - 64); ctx.lineTo(bx + 234, CB - 63); ctx.stroke();
+  // Most slobode
+  ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 1;
+  for (const px of [430, 530]) for (let i = 1; i <= 5; i++) { ctx.beginPath(); ctx.moveTo(bx + px, CB - 70); ctx.lineTo(bx + px - i * 13, CB - 16); ctx.moveTo(bx + px, CB - 70); ctx.lineTo(bx + px + i * 13, CB - 16); ctx.stroke(); }
+  box(bx + 355, CB - 18, 250, 5, '#F2EEE6'); box(bx + 428, CB - 72, 5, 72, '#FBF8F2'); box(bx + 528, CB - 72, 5, 72, '#FBF8F2');
+  // katedrala (Imena Marijina)
+  box(bx + 650, CB - 34, 60, 34, '#E9DFC9'); ctx.fillStyle = '#B4573E'; ctx.beginPath(); ctx.moveTo(bx + 646, CB - 34); ctx.lineTo(bx + 680, CB - 52); ctx.lineTo(bx + 714, CB - 34); ctx.fill();
+  box(bx + 692, CB - 96, 16, 96, '#E9DFC9'); ctx.fillStyle = '#6F8E7C'; ctx.beginPath(); ctx.moveTo(bx + 690, CB - 96); ctx.lineTo(bx + 700, CB - 128); ctx.lineTo(bx + 710, CB - 96); ctx.fill(); cross(bx + 700, CB - 128);
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(bx + 700, CB - 84, 4, 0, 7); ctx.fill();
+  ctx.fillStyle = 'rgba(120,110,95,.3)'; ctx.fillRect(bx + 696, CB - 70, 8, 14); ctx.fillRect(bx + 660, CB - 26, 6, 12); ctx.fillRect(bx + 676, CB - 26, 6, 12);
+  // vojvođanske žute kuće
+  [[750, 26], [780, 22], [806, 28], [840, 24], [868, 26], [898, 22]].forEach(([x, w], i) => roofHouse(bx + x, w, 16 + (i * 5) % 9, '#F2D48A', '#C0573E'));
+}
+function drawSign(s) {
+  const x = s.x, y = GROUND;
+  box(x - 2, y - 46, 4, 46, '#8A8A90');
+  ctx.font = '900 13px Nunito, sans-serif'; const w = Math.max(70, ctx.measureText(s.name).width + 20);
+  ctx.fillStyle = '#FFFDF6'; ctx.strokeStyle = '#2A1F25'; ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x - w / 2, y - 74, w, 28, 5) : ctx.rect(x - w / 2, y - 74, w, 28); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#2A1F25'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(s.name.toUpperCase(), x, y - 60); ctx.textBaseline = 'alphabetic';
+}
+
+/* ---------- Crtanje: Oskar i ovce ---------- */
+function drawOskar(k) {
+  const t = S.t, happy = k.done && !k.hitSheep, sad = k.hitSheep;
+  if (k.shock) k.shock = Math.max(0, k.shock - 0.015);
+  const hop = happy ? -Math.abs(Math.sin(t * 9)) * 16 : 0, sway = happy ? Math.sin(t * 9) * 0.14 : sad ? Math.sin(t * 14) * 0.05 : Math.sin(t * 2.2) * 0.05;
+  ctx.save(); ctx.translate(k.x, GROUND - 2); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.fillStyle = 'rgba(29,43,24,.25)'; ctx.beginPath(); ctx.ellipse(0, 2, 26 + hop * 0.5, 5, 0, 0, 7); ctx.fill();
+  ctx.translate(0, hop); ctx.rotate(sway);
+  // tanke noge (u plesu se ritaju) i opanci sa kljunom
+  const kick = happy ? Math.sin(t * 18) * 9 : 0;
+  ctx.strokeStyle = '#5B4636'; ctx.lineWidth = 6;
+  ctx.beginPath(); ctx.moveTo(-5, -46); ctx.lineTo(-7 - kick, -5); ctx.moveTo(5, -46); ctx.lineTo(7 + kick, -5); ctx.stroke();
+  for (const fx of [-7 - kick, 7 + kick]) { ctx.fillStyle = '#3A2A20'; ctx.beginPath(); ctx.ellipse(fx - 3, -3, 9, 4.5, 0, 0, 7); ctx.fill(); ctx.strokeStyle = '#3A2A20'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(fx - 11, -4); ctx.quadraticCurveTo(fx - 16, -8, fx - 12, -11); ctx.stroke(); }
+  // palica
+  ctx.strokeStyle = '#8A5A33'; ctx.lineWidth = 4;
+  if (happy) { ctx.save(); ctx.translate(-26, -120); ctx.rotate(Math.sin(t * 9) * 0.5); ctx.beginPath(); ctx.moveTo(0, 30); ctx.lineTo(0, -50); ctx.arc(8, -50, 8, Math.PI, 0); ctx.lineTo(16, -44); ctx.stroke(); ctx.restore(); }
+  else { ctx.beginPath(); ctx.moveTo(-32, 0); ctx.lineTo(-32, -118); ctx.arc(-24, -118, 8, Math.PI, 0); ctx.lineTo(-16, -112); ctx.stroke(); }
+  // mršavo tijelo: košulja, kožni prsluk, crveni pojas
+  ctx.fillStyle = '#F5EFE4'; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-13, -88, 26, 46, 9) : ctx.rect(-13, -88, 26, 46); ctx.fill();
+  ctx.fillStyle = '#C98B4A'; ctx.fillRect(-14, -84, 9, 38); ctx.fillRect(5, -84, 9, 38);
+  ctx.fillStyle = '#F0DDB4'; for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.arc(-6, -80 + i * 8, 1.8, 0, 7); ctx.arc(6, -80 + i * 8, 1.8, 0, 7); ctx.fill(); }
+  ctx.fillStyle = '#C23B3B'; ctx.fillRect(-13, -50, 26, 6); ctx.beginPath(); ctx.moveTo(10, -46); ctx.lineTo(16, -34); ctx.lineTo(8, -36); ctx.fill();
+  // ruke
+  const arm = (sx, sy, hx, hy) => { ctx.strokeStyle = '#F5EFE4'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(hx, hy); ctx.stroke(); ctx.fillStyle = '#F2C29B'; ctx.beginPath(); ctx.arc(hx, hy, 4.5, 0, 7); ctx.fill(); };
+  if (happy) { arm(-11, -82, -26, -110 + Math.sin(t * 9) * 4); arm(11, -82, 26 + Math.sin(t * 9 + 2) * 6, -112); }
+  else if (sad) { arm(-11, -82, -16, -128); arm(11, -82, 16, -128); }
+  else { const w = Math.sin(t * 7) * 0.5; arm(11, -82, 11 + Math.sin(0.5 + w) * 24, -84 - Math.cos(0.5 + w) * 24); arm(-11, -82, -31, -66); }
+  // velika glava
+  const hy = -112;
+  ctx.fillStyle = '#F2C29B'; ctx.beginPath(); ctx.arc(0, hy, 22, 0, 7); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(19, hy + 2, 5, 7, 0, 0, 7); ctx.fill();
+  ctx.fillStyle = 'rgba(242,110,100,.45)'; ctx.beginPath(); ctx.arc(1, hy + 6, 5, 0, 7); ctx.arc(15, hy + 6, 5, 0, 7); ctx.fill();
+  // čupave obrve i oči
+  ctx.strokeStyle = '#4A3424'; ctx.lineWidth = 4; const brow = sad ? 3 : happy ? -3 : 0;
+  ctx.beginPath(); ctx.moveTo(-7, hy - 13 - brow); ctx.lineTo(2, hy - 14 + brow); ctx.moveTo(8, hy - 14 + brow); ctx.lineTo(17, hy - 13 - brow); ctx.stroke();
+  ctx.strokeStyle = '#2A1F25'; ctx.fillStyle = '#2A1F25'; ctx.lineWidth = 2.2;
+  if (happy) { ctx.beginPath(); ctx.arc(-2, hy - 5, 3.5, Math.PI * 1.1, Math.PI * 1.9); ctx.moveTo(15.5, hy - 5); ctx.arc(12, hy - 5, 3.5, Math.PI * 1.1, Math.PI * 1.9); ctx.stroke(); }
+  else if (k.shock > 0) { for (const ex of [-2, 12]) { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(ex, hy - 5, 5, 0, 7); ctx.fill(); ctx.fillStyle = '#2A1F25'; ctx.beginPath(); ctx.arc(ex, hy - 5, 1.5, 0, 7); ctx.fill(); } }
+  else { ctx.beginPath(); ctx.arc(-2, hy - 5, 2.8, 0, 7); ctx.arc(12, hy - 5, 2.8, 0, 7); ctx.fill(); }
+  // ogroman nos krompir
+  ctx.fillStyle = '#E8957A'; ctx.beginPath(); ctx.ellipse(-19, hy + 4, 11, 9, -0.2, 0, 7); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,.45)'; ctx.beginPath(); ctx.arc(-22, hy + 1, 3, 0, 7); ctx.fill();
+  // usta
+  if (happy || k.shock > 0) { ctx.fillStyle = '#7A1E3A'; ctx.beginPath(); ctx.ellipse(-4, hy + 16, 6, happy ? 5 : 6, 0, 0, Math.PI * (happy ? 1 : 2)); ctx.fill(); }
+  // brkovi zavrnuti nagore
+  ctx.fillStyle = '#6B4A30';
+  ctx.beginPath(); ctx.moveTo(-14, hy + 9); ctx.bezierCurveTo(-24, hy + 18, -36, hy + 12, -34, hy + 2); ctx.bezierCurveTo(-30, hy + 8, -22, hy + 8, -14, hy + 6); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(-10, hy + 9); ctx.bezierCurveTo(-2, hy + 18, 12, hy + 14, 12, hy + 3); ctx.bezierCurveTo(6, hy + 9, -2, hy + 8, -10, hy + 6); ctx.fill();
+  // preveliki slamni šešir s cvijetom (u plesu poskakuje)
+  const lift = happy ? Math.abs(Math.sin(t * 9 + 1)) * 12 : sad ? -3 : 0;
+  ctx.save(); ctx.translate(0, -lift); if (happy) ctx.rotate(Math.sin(t * 9) * 0.2);
+  ctx.fillStyle = '#E8C25A'; ctx.beginPath(); ctx.ellipse(0, hy - 18, 40, 8, 0, 0, 7); ctx.fill();
+  ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-17, hy - 44, 34, 28, 10) : ctx.rect(-17, hy - 44, 34, 28); ctx.fill();
+  ctx.strokeStyle = '#C79A2E'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.ellipse(0, hy - 18, 34, 5, 0, 0.1, Math.PI - 0.1); ctx.stroke();
+  ctx.fillStyle = '#7A4522'; ctx.fillRect(-17, hy - 26, 34, 6);
+  ctx.fillStyle = '#FF6F61'; for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2; ctx.beginPath(); ctx.arc(10 + Math.cos(a) * 3.5, hy - 26 + Math.sin(a) * 3.5, 2.6, 0, 7); ctx.fill(); }
+  ctx.fillStyle = '#FFC93C'; ctx.beginPath(); ctx.arc(10, hy - 26, 2, 0, 7); ctx.fill();
+  ctx.restore();
+  if (k.pooped) { ctx.font = '26px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('💩', 0, hy - 58 - lift); ctx.textBaseline = 'alphabetic'; ctx.fillStyle = 'rgba(122,74,40,.8)'; ctx.beginPath(); ctx.ellipse(-6, hy - 2, 7, 4, 0.4, 0, 7); ctx.ellipse(10, hy + 10, 5, 3, -0.3, 0, 7); ctx.fill(); }
+  ctx.restore();
+}
+function drawSheep(o) {
+  const x = o.x, y = GROUND, b = Math.sin(S.t * 6 + o.ph) * 1.5, sc = o.scared ? Math.max(0, o.scared -= 0.02) : 0;
+  ctx.fillStyle = '#2E2833'; for (const lx of [10, 18, 32, 40]) ctx.fillRect(x + lx, y - 14, 4, 14);
+  ctx.fillStyle = '#FBF8F0'; ctx.strokeStyle = '#D9D1C2'; ctx.lineWidth = 1.5;
+  [[16, -24, 11], [27, -28, 12], [38, -24, 11], [22, -18, 10], [34, -18, 10], [28, -32 + b, 9]].forEach(([cx, cy, r]) => { ctx.beginPath(); ctx.arc(x + cx, y + cy - sc * 6, r, 0, 7); ctx.fill(); ctx.stroke(); });
+  ctx.fillStyle = '#3A3340'; ctx.beginPath(); ctx.ellipse(x + 4, y - 28 + b - sc * 6, 8, 10, -0.3, 0, 7); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(x + 10, y - 36 + b - sc * 6, 5, 2.5, 0.5, 0, 7); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x + 1, y - 31 + b - sc * 6, 2.2, 0, 7); ctx.fill();
+  ctx.fillStyle = '#2A1F25'; ctx.beginPath(); ctx.arc(x + 0.5, y - 31 + b - sc * 6, 1.1, 0, 7); ctx.fill();
+}
+function bubble(text, cx, by) {
+  ctx.font = '900 13px Nunito, sans-serif';
+  const w = ctx.measureText(text).width + 22, x = clamp(cx - w / 2, 8, LW - w - 8), y = by - 30;
+  ctx.fillStyle = 'rgba(255,242,226,.96)'; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, w, 28, 14) : ctx.rect(x, y, w, 28); ctx.fill();
+  const tx = clamp(cx, x + 14, x + w - 14); ctx.beginPath(); ctx.moveTo(tx - 7, y + 27); ctx.lineTo(tx, y + 37); ctx.lineTo(tx + 7, y + 27); ctx.fill();
+  ctx.fillStyle = '#241A3D'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, x + w / 2, y + 14); ctx.textBaseline = 'alphabetic';
+}
+
+function drawObstacle(o) {
+  if (o.type === 'ovca') { drawSheep(o); return; }
+  const x = o.x, y = GROUND;
+  if (o.type === 'potok') {
+    ctx.fillStyle = '#5BB6E3'; ctx.beginPath(); ctx.moveTo(x, y); ctx.quadraticCurveTo(x + o.w / 2, y + 40, x + o.w, y); ctx.lineTo(x + o.w, LH); ctx.lineTo(x, LH); ctx.fill();
+    ctx.fillStyle = '#3E9ACB'; ctx.fillRect(x, y + 6, o.w, LH - y);
+    ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 2; for (let i = 0; i < 3; i++) { const yy = y + 14 + i * 12, ph = (S.t * 60 + i * 20) % 30; ctx.beginPath(); ctx.moveTo(x + 8 + ph * 0.3, yy); ctx.lineTo(x + 26 + ph * 0.3, yy); ctx.stroke(); }
+    ctx.fillStyle = '#8A6A4A'; ctx.fillRect(x - 6, y - 2, 8, 6); ctx.fillRect(x + o.w - 2, y - 2, 8, 6);
+  } else if (o.type === 'ograda') {
+    ctx.fillStyle = '#8A5A33'; ctx.fillRect(x + 2, y - o.h, 8, o.h); ctx.fillRect(x + o.w - 10, y - o.h, 8, o.h);
+    ctx.fillStyle = '#B07A47'; ctx.fillRect(x - 4, y - o.h + 8, o.w + 8, 8); ctx.fillRect(x - 4, y - o.h + 28, o.w + 8, 8);
+    ctx.fillStyle = '#FFFDF6'; ctx.fillRect(x + o.w / 2 - 6, y - o.h + 10, 12, 4);
+  } else if (o.type === 'sijeno') {
+    ctx.fillStyle = '#E8C25A'; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y - o.h, o.w, o.h, 8) : ctx.rect(x, y - o.h, o.w, o.h); ctx.fill();
+    ctx.strokeStyle = '#C79A2E'; ctx.lineWidth = 2; for (let i = 1; i < 4; i++) { ctx.beginPath(); ctx.moveTo(x + 4, y - o.h + i * 11); ctx.lineTo(x + o.w - 4, y - o.h + i * 11); ctx.stroke(); }
+    ctx.fillStyle = '#9C6B2A'; ctx.fillRect(x + 14, y - o.h, 5, o.h); ctx.fillRect(x + o.w - 19, y - o.h, 5, o.h);
+  } else {
+    ctx.fillStyle = '#9A98A6'; ctx.beginPath(); ctx.moveTo(x, y); ctx.quadraticCurveTo(x + 2, y - o.h, x + o.w * 0.45, y - o.h); ctx.quadraticCurveTo(x + o.w, y - o.h + 4, x + o.w, y); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.3)'; ctx.beginPath(); ctx.ellipse(x + o.w * 0.4, y - o.h + 8, 8, 4, -0.3, 0, 7); ctx.fill();
+  }
+}
+// kakica 💩: emoji se nacrta jednom u mali canvas pa se samo kopira
+const POOP = document.createElement('canvas'); POOP.width = POOP.height = 64;
+(() => { const c = POOP.getContext('2d'); c.font = '52px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji","Twemoji Mozilla",sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('💩', 32, 36); })();
+function drawItem(it) {
+  const b = Math.sin(S.t * 5 + it.x * 0.05) * 3;
+  if (it.type === 'jabuka') {
+    ctx.drawImage(POOP, it.x - 13, it.y - 15 + b, 26, 26);
+  } else {
+    ctx.save(); ctx.translate(it.x, it.y + b); ctx.rotate(0.5);
+    ctx.fillStyle = '#FF8A1F'; ctx.beginPath(); ctx.moveTo(-6, -12); ctx.lineTo(6, -12); ctx.lineTo(0, 16); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#D96A0A'; ctx.lineWidth = 1.5; for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.moveTo(-4 + i, -6 + i * 7); ctx.lineTo(1 + i, -6 + i * 7); ctx.stroke(); }
+    ctx.fillStyle = '#4FA35A'; ctx.beginPath(); ctx.ellipse(-3, -16, 3, 7, -0.4, 0, 7); ctx.ellipse(3, -16, 3, 7, 0.4, 0, 7); ctx.fill();
+    ctx.restore();
+    ctx.strokeStyle = 'rgba(255,201,60,.8)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(it.x, it.y + b, 20 + Math.sin(S.t * 8) * 3, 0, 7); ctx.stroke();
+  }
+}
+
+/* ---------- Crtanje: Dragan i Avdulj ---------- */
+const COAT = '#9A5B2E', COAT_D = '#7A4522', MANE = '#3B2414';
+function leg(hx, hy, a1, a2, col) {
+  const L1 = 24, L2 = 24;
+  const kx = hx + Math.sin(a1) * L1, ky = hy + Math.cos(a1) * L1;
+  const fx = kx + Math.sin(a1 + a2) * L2, fy = ky + Math.cos(a1 + a2) * L2;
+  ctx.strokeStyle = col; ctx.lineCap = 'round';
+  ctx.lineWidth = 11; ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(kx, ky); ctx.stroke();
+  ctx.lineWidth = 8; ctx.beginPath(); ctx.moveTo(kx, ky); ctx.lineTo(fx, fy); ctx.stroke();
+  ctx.fillStyle = '#2A1F25'; ctx.beginPath(); ctx.ellipse(fx + 1, fy + 2, 6, 4, 0, 0, 7); ctx.fill();
+}
+function drawHorse(x, y) {
+  const run = S.running && !S.stubborn && S.speed > 40, air = !horse.ground, ph = horse.phase;
+  const bob = run && !air ? -Math.abs(Math.sin(ph)) * 4 : 0;
+  ctx.save(); ctx.translate(x, y + bob);
+  if (S.inv > 0 && Math.floor(S.inv * 10) % 2 === 0) ctx.globalAlpha = 0.45;
+  if (air) ctx.rotate(clamp(horse.vy / 2600, -0.18, 0.18));
+  // sjena
+  ctx.save(); ctx.globalAlpha *= 0.25; ctx.fillStyle = '#1D2B18'; ctx.beginPath(); ctx.ellipse(0, GROUND - y - bob + 2, 50 * (1 - (GROUND - y) / 300), 6, 0, 0, 7); ctx.fill(); ctx.restore();
+  // turbo trag
+  if (S.turbo > 0) { ctx.fillStyle = 'rgba(255,201,60,.5)'; for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.ellipse(-70 - i * 16, -62 + Math.sin(S.t * 30 + i) * 4, 12 - i * 2, 4, 0, 0, 7); ctx.fill(); } }
+  // rep
+  ctx.strokeStyle = MANE; ctx.lineCap = 'round';
+  for (let i = 0; i < 6; i++) { const w = Math.sin(S.t * (run ? 12 : 3) + i) * (run ? 8 : 3); ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(-48, -72); ctx.quadraticCurveTo(-70, -66 + i * 3 + w, -80 - i * 2, -36 + i * 4 + w); ctx.stroke(); }
+  // noge (dalje tamnije)
+  const A = run ? 0.75 : 0.05;
+  let legs;
+  if (air) legs = [[-30, 0.9, -1.4], [-22, 0.7, -1.2], [34, -1.0, 1.6], [42, -0.8, 1.3]];
+  else if (S.stubborn) legs = [[-30, 0.12, 0], [-22, -0.05, 0], [34, -0.18, 0.05], [42, 0.05, 0]];
+  else legs = [[-30, Math.sin(ph) * A, Math.max(0, Math.sin(ph + 1.2)) * 1.1 * A], [-22, Math.sin(ph + 0.7) * A, Math.max(0, Math.sin(ph + 1.9)) * 1.1 * A],
+               [34, Math.sin(ph + Math.PI) * A, -Math.max(0, Math.sin(ph + Math.PI + 1.2)) * 1.3 * A], [42, Math.sin(ph + Math.PI + 0.7) * A, -Math.max(0, Math.sin(ph + Math.PI + 1.9)) * 1.3 * A]];
+  leg(legs[0][0], -50, legs[0][1], legs[0][2], COAT_D); leg(legs[2][0], -50, legs[2][1], legs[2][2], COAT_D);
+  // tijelo
+  ctx.fillStyle = COAT; ctx.beginPath(); ctx.ellipse(0, -64, 54, 25, 0, 0, 7); ctx.fill();
+  ctx.fillStyle = 'rgba(255,220,180,.25)'; ctx.beginPath(); ctx.ellipse(4, -50, 40, 9, 0, 0, 7); ctx.fill();
+  leg(legs[1][0], -50, legs[1][1], legs[1][2], COAT); leg(legs[3][0], -50, legs[3][1], legs[3][2], COAT);
+  // vrat i glava (spuštena kad je tvrdoglav)
+  const headDown = S.stubborn ? 14 : 0, nod = run ? Math.sin(ph) * 3 : 0;
+  ctx.fillStyle = COAT; ctx.beginPath(); ctx.moveTo(24, -84); ctx.lineTo(50, -124 + headDown + nod); ctx.lineTo(72, -114 + headDown + nod); ctx.lineTo(50, -58); ctx.closePath(); ctx.fill();
+  ctx.save(); ctx.translate(72, -118 + headDown + nod); ctx.rotate(0.55 + (S.stubborn ? 0.35 : 0));
+  ctx.fillStyle = COAT; ctx.beginPath(); ctx.ellipse(0, 0, 28, 15, 0, 0, 7); ctx.fill();
+  ctx.fillStyle = '#C79A7A'; ctx.beginPath(); ctx.ellipse(20, 2, 13, 11, 0, 0, 7); ctx.fill();
+  ctx.fillStyle = '#5A3420'; ctx.beginPath(); ctx.ellipse(25, -2, 2.5, 2, 0, 0, 7); ctx.fill();
+  ctx.fillStyle = '#FFFDF6'; ctx.beginPath(); ctx.ellipse(2, -6, 14, 3.2, 0, 0, 7); ctx.fill();   // bijela lisa
+  ctx.strokeStyle = '#5A3420'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(19, 8, 6, 0.2, 1.6); ctx.stroke();
+  // velike razrogačene oči iza ogromnih okruglih naočara
+  const hurt = horse.hurt > 0, slide = S.stubborn ? 5 : 0, tilt = hurt ? 0.35 : 0;
+  const eR = hurt ? 11 : 9;
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(-8, -4, eR, 0, 7); ctx.fill();
+  if (S.stubborn) { ctx.fillStyle = COAT; ctx.fillRect(-18, -15, 20, 11); ctx.strokeStyle = '#3B2414'; ctx.lineWidth = 1.8; ctx.beginPath(); ctx.moveTo(-17, -4); ctx.lineTo(1, -4); ctx.stroke(); }
+  const jit = hurt ? Math.sin(S.t * 60) * 1.2 : 0;
+  ctx.fillStyle = '#2A1F25'; ctx.beginPath(); ctx.arc(-5 + jit, S.stubborn ? 0 : -4, hurt ? 1.8 : 4.8, 0, 7); ctx.fill();
+  if (!hurt) { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(-6.5, -6, 1.6, 0, 7); ctx.fill(); }
+  // čupava prosijeda brada (maše se u galopu)
+  const bw = run ? Math.sin(S.t * 14) * 2.5 : Math.sin(S.t * 3) * 0.8;
+  ctx.fillStyle = '#8E8A86'; ctx.beginPath(); ctx.ellipse(10, 12, 19, 8, 0.1, 0, 7); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(-4, 12); ctx.quadraticCurveTo(6 + bw, 38, 24, 14); ctx.fill();
+  ctx.fillStyle = '#A9A5A0'; for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.moveTo(-2 + i * 5, 14); ctx.lineTo(1 + i * 5 + bw, 26 + (i % 2) * 6); ctx.lineTo(4 + i * 5, 14); ctx.fill(); }
+  ctx.strokeStyle = '#D6D2CC'; ctx.lineWidth = 1.3; for (let i = 0; i < 6; i++) { ctx.beginPath(); ctx.moveTo(-1 + i * 4, 10); ctx.lineTo(1 + i * 3.6 + bw, 20 + (i % 2) * 5); ctx.stroke(); }
+  ctx.strokeStyle = '#5E5A57'; for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.moveTo(2 + i * 5, 11); ctx.lineTo(3 + i * 4.4 + bw, 22); ctx.stroke(); }
+  // ogromne okrugle naočare (kad je tvrdoglav spadnu na nos, kad se udari nakrive se)
+  ctx.save(); ctx.translate(-8 + slide * 0.6, -4 + slide); ctx.rotate(tilt);
+  ctx.fillStyle = 'rgba(200,230,255,.18)'; ctx.strokeStyle = '#1E1A1A'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.arc(0, 0, 13, 0, 7); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(21, -3, 5, 11, 0, 0, 7); ctx.fill(); ctx.stroke();
+  ctx.lineWidth = 2.4; ctx.beginPath(); ctx.moveTo(12, -4); ctx.lineTo(16, -4); ctx.moveTo(-13, -2); ctx.lineTo(-20, 0); ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 0, 9, -2.4, -1.6); ctx.stroke();
+  ctx.restore();
+  // uši
+  ctx.fillStyle = COAT_D; ctx.beginPath(); ctx.moveTo(-18, -10); ctx.lineTo(-24, -28); ctx.lineTo(-10, -13); ctx.fill();
+  ctx.restore();
+  // griva
+  ctx.strokeStyle = MANE;
+  for (let i = 0; i < 9; i++) { const t = i / 8, bx = 26 + t * 26, by = -88 - t * 36 + headDown * t + nod * t, w = Math.sin(S.t * (run ? 14 : 3) + i) * (run ? 5 : 2); ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(bx, by); ctx.quadraticCurveTo(bx - 10, by + 4 + w, bx - 18 - (run ? 6 : 0), by + 14 + w); ctx.stroke(); }
+  // sedlo
+  ctx.fillStyle = '#3FB7E8'; ctx.beginPath(); ctx.ellipse(-6, -86, 24, 8, 0, Math.PI, 0); ctx.fill(); ctx.fillRect(-26, -88, 40, 10);
+  ctx.fillStyle = '#2C93C2'; ctx.fillRect(-20, -78, 26, 14);
+  ctx.strokeStyle = '#2A1F25'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-6, -74); ctx.lineTo(-8, -54); ctx.stroke(); ctx.strokeRect(-12, -54, 8, 4);
+  // Avdulj
+  drawDzudzo(-6, -108, run);
+  // uzde
+  ctx.strokeStyle = '#5A3420'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(6, -104); ctx.quadraticCurveTo(50, -100 + headDown, 86, -106 + headDown + nod); ctx.stroke();
+  ctx.restore();
+  if (S.stubborn) {
+    ctx.fillStyle = 'rgba(255,255,255,.85)'; const pf = (S.t * 2) % 1;
+    ctx.beginPath(); ctx.arc(x + 112 + pf * 18, y - 86 + 14 - pf * 10, 6 + pf * 6, 0, 7); ctx.fill();
+  }
+}
+// boja krzna iz prodavnice: [tamno, svijetlo, sredina, rub, antene, ručice]
+const FURK = { def: ['#D9692A', '#FFAE52', '#FFC27A', '#F08A38', '#C9561E', '#E3762C'], plavo: ['#3567C4', '#7FB6FF', '#A9D4FF', '#4F88DF', '#2B4E9E', '#3567C4'], roze: ['#D9539A', '#FF9ACB', '#FFC4E1', '#F26AAE', '#B23D7F', '#D9539A'], zeleno: ['#2F9A5A', '#7FDDA0', '#B5F0C4', '#4DBB78', '#24804A', '#2F9A5A'], zlatno: ['#C9961A', '#FFE070', '#FFF1A8', '#E8B82A', '#A87A10', '#C9961A'] };
+let FK = FURK.def; try { FK = FURK[(loadPet() || {}).eq?.fur] || FURK.def; } catch (e) {}
+const FUR = Array.from({ length: 40 }, (_, i) => ({ a: i / 40 * Math.PI * 2, l: rnd(4, 7), ph: rnd(0, 6) }));
+function drawDzudzo(x, y, run) {
+  const R = 15, bounce = run && horse.ground ? -Math.abs(Math.sin(horse.phase)) * 3 : 0;
+  ctx.save(); ctx.translate(x, y + bounce);
+  ctx.lineCap = 'round';
+  for (const f of FUR) { const c = Math.cos(f.a), s = Math.sin(f.a), w = Math.sin(S.t * 6 + f.ph) * (reduceMotion ? 0.3 : 1) - (run ? c * 2 : 0); ctx.strokeStyle = s > 0.3 ? FK[0] : FK[1]; ctx.lineWidth = 3.2; ctx.beginPath(); ctx.moveTo(c * R * 0.8, s * R * 0.8); ctx.lineTo(c * (R + f.l) + w - (run ? 2 : 0), s * (R + f.l)); ctx.stroke(); }
+  const g = ctx.createRadialGradient(-4, -5, 1, 0, 0, R); g.addColorStop(0, FK[2]); g.addColorStop(1, FK[3]);
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, R, 0, 7); ctx.fill();
+  const wob = Math.sin(S.t * 8) * 2;
+  ctx.strokeStyle = FK[4]; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-4, -13); ctx.lineTo(-9 - wob, -26); ctx.moveTo(5, -13); ctx.lineTo(9 - wob, -26); ctx.stroke();
+  ctx.fillStyle = '#FF6F61'; ctx.beginPath(); ctx.arc(-9 - wob, -26, 3, 0, 7); ctx.arc(9 - wob, -26, 3, 0, 7); ctx.fill();
+  const hurt = horse.hurt > 0;
+  for (const ex of [3, 11]) {
+    if (hurt) { ctx.strokeStyle = '#2A1F45'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(ex - 3, -5); ctx.lineTo(ex + 3, 1); ctx.moveTo(ex + 3, -5); ctx.lineTo(ex - 3, 1); ctx.stroke(); continue; }
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(ex, -2, 4.4, 0, 7); ctx.fill();
+    ctx.fillStyle = '#2A1F45'; ctx.beginPath(); ctx.arc(ex + 1.5, -2, 2.4, 0, 7); ctx.fill();
+  }
+  ctx.strokeStyle = '#2A1F45'; ctx.lineWidth = 1.8; ctx.beginPath();
+  if (hurt) ctx.arc(7, 9, 3, Math.PI * 1.1, Math.PI * 1.9);
+  else if (!horse.ground || S.turbo > 0) { ctx.fillStyle = '#7A1E3A'; ctx.ellipse(7, 6, 3.5, 3, 0, 0, 7); ctx.fill(); }
+  else ctx.arc(7, 3, 4, 0.15 * Math.PI, 0.85 * Math.PI);
+  ctx.stroke();
+  // ručice drže uzde
+  ctx.strokeStyle = FK[5]; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(10, 6); ctx.lineTo(14, 4); ctx.stroke();
+  ctx.restore();
+}
+function heart(x, y, s) { ctx.beginPath(); ctx.moveTo(x, y + s * 0.35); ctx.bezierCurveTo(x - s, y - s * 0.3, x - s * 0.45, y - s, x, y - s * 0.45); ctx.bezierCurveTo(x + s * 0.45, y - s, x + s, y - s * 0.3, x, y + s * 0.35); ctx.fill(); }
+function drawParts() {
+  for (const p of parts) {
+    ctx.globalAlpha = p.type === 'poop' ? 1 : clamp(p.life / p.max * 1.5, 0, 1);
+    if (p.type === 'poop') { ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot || 0); ctx.font = '30px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('💩', 0, 0); ctx.restore(); continue; }
+    if (p.type === 'mud') { ctx.fillStyle = '#7A4A28'; ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, 7); ctx.fill(); continue; }
+    if (p.type === 'heart') { ctx.fillStyle = '#FF6F61'; heart(p.x, p.y, 10); }
+    else if (p.type === 'dust') { ctx.fillStyle = 'rgba(201,167,116,.8)'; ctx.beginPath(); ctx.arc(p.x, p.y, 6 * (1.5 - p.life / p.max), 0, 7); ctx.fill(); }
+    else if (p.type === 'drop') { ctx.fillStyle = '#7FD3F5'; ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, 7); ctx.fill(); }
+    else if (p.type === 'text') { ctx.font = '900 18px Nunito, sans-serif'; ctx.textAlign = 'center'; ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(36,26,61,.8)'; ctx.strokeText(p.txt, p.x, p.y); ctx.fillStyle = '#FFC93C'; ctx.fillText(p.txt, p.x, p.y); }
+  }
+  ctx.globalAlpha = 1;
+}
+function draw() {
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = '#7CC6EE'; ctx.fillRect(0, 0, cv.width, cv.height); ctx.fillStyle = '#4F8F45'; ctx.fillRect(0, DPR * (OY + (GROUND + 20) * K), cv.width, cv.height);
+  ctx.setTransform(DPR * K, 0, 0, DPR * K, 0, DPR * OY);
+  drawBg();
+  for (const s of signs) drawSign(s);
+  if (S.oskar) drawOskar(S.oskar);
+  for (const o of obs) drawObstacle(o);
+  for (const it of items) drawItem(it);
+  drawHorse(HX(), horse.y);
+  drawParts();
+  if (S.oskar && S.oskar.x > -60 && S.oskar.x < LW + 40 && (!S.oskar.done || S.oskar.x > HX() - 200)) bubble(S.oskar.say, S.oskar.x, GROUND - 182);
+  if (S.stubborn) {
+    const bw = 150, x = HX() - bw / 2 + 20, y = horse.y - 196;
+    ctx.fillStyle = 'rgba(36,26,61,.88)'; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, bw, 30, 15) : ctx.rect(x, y, bw, 30); ctx.fill();
+    ctx.fillStyle = '#FFF2E2'; ctx.font = '900 14px Nunito, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(`Pomazi Dragana ${S.stubborn.pets}/5`, x + bw / 2, y + 15); ctx.textBaseline = 'alphabetic';
+  }
+}
+let last = performance.now();
+function frame(now) { const dt = Math.min(0.04, (now - last) / 1000); last = now; update(dt); draw(); requestAnimationFrame(frame); }
+
+/* ---------- Rang lista (zajednička sa sobom, čuva se u ovom pregledaču) ---------- */
+const LB_KEY = 'avdulj-rang', NAME_KEY = 'avdulj-ime';
+const lbLoad = () => { try { return JSON.parse(localStorage.getItem(LB_KEY)) || {}; } catch (e) { return {}; } };
+const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const pname = $('#pname'); try { pname.value = localStorage.getItem(NAME_KEY) || ''; } catch (e) {}
+pname.addEventListener('input', () => { try { localStorage.setItem(NAME_KEY, pname.value.trim()); } catch (e) {} });
+pname.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') $('#startBtn').click(); });
+function lbAdd(game, rez, extra) {
+  const all = lbLoad(), list = all[game] || [], id = Date.now();
+  list.push({ ime: (pname.value.trim() || 'Igrač').slice(0, 16), rez, extra, id });
+  list.sort((a, b) => b.rez - a.rez); all[game] = list.slice(0, 10);
+  try { localStorage.setItem(LB_KEY, JSON.stringify(all)); } catch (e) {}
+  return { list: all[game], id, rank: all[game].findIndex(e => e.id === id) + 1 };
+}
+function lbRender(el, r, unit, exUnit) {
+  if (!r.list.length) { el.innerHTML = ''; return; }
+  el.innerHTML = `<h3>Rang lista${r.rank ? ` · ti si ${r.rank}.` : ''}</h3><ol class="lb">${r.list.map((e, i) => `<li class="${e.id === r.id ? 'me' : ''}"><span class="rk">${i < 3 ? ['🥇', '🥈', '🥉'][i] : i + 1}</span><span class="nm">${esc(e.ime)}</span><span class="ex">${e.extra} ${exUnit}</span><b>${e.rez} ${unit}</b></li>`).join('')}</ol>`;
+}
+/* ---------- Početak i kraj ---------- */
+let best = 0; try { best = +localStorage.getItem('dz-konj-best') || 0; } catch (e) {}
+function startRide() {
+  if (!petCheck()) return;
+  ac(); neigh(0.8);
+  scroll = 0;
+  Object.assign(S, { running: true, t: 0, dist: 0, speed: 0, apples: 0, lives: 3, inv: 0, turbo: 0, stubborn: null, nextStubborn: rnd(16, 24), ended: false, oskar: null, nextOskar: 2.5, city: cityAt(), offer: 0, boost: 1, poopT: 0 });
+  $('#boostPill').hidden = true; $('#offerM').hidden = true;
+  Object.assign(horse, { y: GROUND, vy: 0, ground: true, hurt: 0 });
+  obs = []; items = []; parts = []; signs = [{ x: HX() + 140, name: CITIES[S.city] }]; nextObs = 520; nextItem = 220;
+  $('#intro').hidden = true; $('#endM').hidden = true; renderHud();
+  toast('Hija, Dragane!', 1200);
+}
+function endRide() {
+  if (S.ended) return; S.ended = true; S.running = false;
+  const m = Math.floor(S.dist / 10), rec = m > best;
+  if (rec) { best = m; try { localStorage.setItem('dz-konj-best', String(best)); } catch (e) {} }
+  const p = payPet(S.apples, m);
+  if (m > 0) lbRender($('#eLb'), lbAdd('konj', m, S.apples), 'm', '💩'); else $('#eLb').innerHTML = '';
+  $('#eApples').textContent = S.apples; $('#eDist').textContent = m; $('#eBest').textContent = best;
+  $('#eTitle').textContent = rec ? 'Novi rekord!' : S.apples >= 20 ? 'Bravo, Avdulje!' : 'Dragan treba odmor';
+  const n = S.apples, m10 = n % 10, m100 = n % 100, nov = m10 === 1 && m100 !== 11 ? 'novčić' : (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) ? 'novčića' : 'novčića';
+  $('#eLine').textContent = `Avdulj nosi kući ${n} ${nov} (kakica za kakicu). Malo je umoran i blatnjav (energija ${Math.round(p.energija)}, čistoća ${Math.round(p.cistoca)}).`;
+  petCheck(); renderHud();
+  setTimeout(() => { $('#endM').hidden = false; }, 700);
+}
+$('#startBtn').addEventListener('click', startRide);
+$('#againBtn').addEventListener('click', startRide);
+addEventListener('pageshow', () => { if (!S.running) petCheck(); });
+petCheck(); renderHud();
+requestAnimationFrame(t => { last = t; frame(t); });
+})();
+</script>
+</body>
+</html>
